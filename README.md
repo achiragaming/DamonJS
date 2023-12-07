@@ -49,9 +49,9 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > System requirements are outlined [here](https://github.com/freyacodes/Lavalink#requirements)
 
 ## Changes
-> 1.0.3 - Implemented support for plugins from the main Kazagumo package.
-> 1.0.4 - Bug fixes on readme file.
-> 1.0.5 - 
+> - 1.0.3 - Implemented support for plugins from the main Kazagumo package.
+> - 1.0.4 - Bug fixes on readme file.
+> - 1.0.5 - 
 
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
