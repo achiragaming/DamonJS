@@ -1,9 +1,7 @@
-name: NodeJS with Gulp
+name: Commit WorkFlow
 
 on:
   push:
-    branches: ["main"]
-  pull_request:
     branches: ["main"]
 
 jobs:
