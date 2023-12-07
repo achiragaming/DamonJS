@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "events": "^3.3.0",
+    "kazagumo": "^2.3.3",
     "shoukaku": "^3.2.2"
   },
   "repository": {

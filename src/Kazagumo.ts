@@ -58,7 +58,7 @@ export class Kazagumo extends EventEmitter {
       for (const [, plugin] of this.KazagumoOptions.plugins.entries()) {
         if (plugin.constructor.name !== 'KazagumoPlugin')
           throw new KazagumoError(1, 'Plugin must be an instance of KazagumoPlugin');
-        plugin.load(this);
+        plugin.load(this)
       }
     }
 
