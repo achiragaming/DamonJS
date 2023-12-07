@@ -29,7 +29,7 @@ npm i kazagumo-better
 
 ## Metadata
 
-> version: 1.0.0  
+> version: 1.0.1  
 > pre-release: false  
 > Last build: [update the latest build timestamp here]
 
