@@ -54,10 +54,8 @@ npm i kazagumo-better
 > Report bugs or issues [here](https://github.com/NoErrorStudio/kazagumo-better/issues/new/choose)
 
 ## Enable playerMoved event
-[If applicable, update this section with any changes needed]
 
 ## Example bot
-[If applicable, update this section with any changes needed]
 
 ## Contributors
 > - Deivu as the owner of Shoukaku   
