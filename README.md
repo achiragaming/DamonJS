@@ -28,9 +28,9 @@ npm i kazagumo-better
 
 ## Metadata
 
-> version: 1.0.1  
+> version: 1.0.4
 > pre-release: false  
-> Last build: [update the latest build timestamp here]
+> Last build: 8/12/2023 
 
 ## Plugins
 - Official [spotify plugin](https://npmjs.com/package/kazagumo-spotify)
@@ -50,6 +50,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 
 ## Changes
 > 1.0.3 - Implemented support for plugins from the main Kazagumo package.
+> 1.0.4 - Bug fixes on readme file.
 
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
@@ -57,9 +58,6 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > Shoukaku support server: https://discord.gg/FVqbtGu (#development)   
 > Report bugs or issues [here](https://github.com/NoErrorStudio/kazagumo-better/issues/new/choose)
 
-## Enable playerMoved event
-
-## Example bot
 
 ## Contributors
 > - Deivu as the owner of Shoukaku   
