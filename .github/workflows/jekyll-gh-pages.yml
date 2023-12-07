@@ -49,6 +49,6 @@ jobs:
         uses: actions/deploy-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          deploy_branch: main # Change this to your deployment branch if needed
+          deploy_branch: gh-pages # Change this to your deployment branch if needed
           publish_dir: ./docs
           clean: true
