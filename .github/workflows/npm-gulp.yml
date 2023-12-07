@@ -22,17 +22,18 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install Dependencies and Build
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Check Errors
         run: |
-          npm install
-          npm run build:full
+          npm run lint
+          npm run format
 
       - name: Build
         run: |
-           npm run lint
-           npm run format
-           npm run build
-           npm run build:docs
+          npm run build
+          npm run build:docs
 
       - name: Publish to NPM
         run: |
