@@ -1,10 +1,10 @@
 {
   "name": "kazagumo-better",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A modified Shoukaku wrapper with enhanced queue support.",
   "main": "dist/Index.js",
   "types": "dist/Index.d.ts",
-  "homepage": "https://github.com/NoErrorStudio/kazagumo-better",
+  "homepage": "https://noerrorstudio.github.io/kazagumo-better/",
   "readme": "https://github.com/NoErrorStudio/kazagumo-better#readme",
   "bugs": {
     "url": "https://github.com/NoErrorStudio/kazagumo-better/issues",

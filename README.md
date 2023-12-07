@@ -18,7 +18,7 @@
 ## Documentation
 Make sure to read the docs thoroughly before use 🙏🙏🙏 The documentation includes a useful search feature.
 > [Shoukaku](https://github.com/Deivu/Shoukaku) by [Deivu](https://github.com/Deivu);  https://deivu.github.io/Shoukaku   
-> Kazagumo Better; https://github.com/NoErrorStudio/kazagumo-better
+> Kazagumo Better; https://noerrorstudio.github.io/kazagumo-better/
 
 ## Installation
 
@@ -28,7 +28,7 @@ npm i kazagumo-better
 
 ## Metadata
 
-> version: 1.0.4
+> version: 1.0.5
 > pre-release: false  
 > Last build: 8/12/2023 
 
@@ -51,6 +51,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 ## Changes
 > 1.0.3 - Implemented support for plugins from the main Kazagumo package.
 > 1.0.4 - Bug fixes on readme file.
+> 1.0.5 - 
 
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
