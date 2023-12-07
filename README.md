@@ -1,4 +1,3 @@
-
 # Kazagumo Better
 #### A modified version of [Kazagumo](https://github.com/Takiyo0/Kazagumo) with significant improvements and bug fixes
 
@@ -39,13 +38,18 @@ npm i kazagumo-better
 - Stone-Deezer [deezer plugin](https://www.npmjs.com/package/stone-deezer)
 > npm i stone-deezer
 
+### Compatibility with Original Kazagumo Plugins
+Kazagumo Better is designed with backward compatibility in mind. It can seamlessly integrate and utilize plugins developed for the original Kazagumo package. If you've been using plugins with the previous version, they should work effortlessly with Kazagumo Better without requiring any modifications.
+
+To explore and enhance the functionality of Kazagumo Better, feel free to leverage the wide array of existing plugins developed for the original Kazagumo package.
+
 ## Lavalink installation
 
 > Detailed step-by-step tutorial with images can be found [here](https://github.com/Weeb-Devs/Laffey/blob/main/readme/LAVALINK_INSTALLATION.md) ©Weeb-Devs, the owner is me tbh   
 > System requirements are outlined [here](https://github.com/freyacodes/Lavalink#requirements)
 
 ## Changes
-[Include your modified code changes and enhancements here]
+> 1.0.3 - Implemented support for plugins from the main Kazagumo package.
 
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
@@ -65,3 +69,4 @@ npm i kazagumo-better
 >   &nbsp;&nbsp;&nbsp;&nbsp; Github: https://github.com/Takiyo0
 > - AchiraGaming as the contributor for modifications and enhancements   
 >   &nbsp;&nbsp;&nbsp;&nbsp; Github: https://github.com/achiragaming
+
