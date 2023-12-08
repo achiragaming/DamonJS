@@ -48,7 +48,8 @@ jobs:
         with:
           name: website
           path: ./docs  # Download 'docs' artifact to the current job's workspace
-
+      - name: Verify 'docs' directory
+        run: ls -l ./docs  # Check if 'docs' directory exists and contains files (optional)
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
