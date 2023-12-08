@@ -26,31 +26,62 @@ jobs:
 
       - name: Build Pages
         run: npm run build:docs
-
-      - name: Verify directory
-        run: ls # Check if 'docs' directory exists and contains files (optional)
+        
+      - name: Upload  artifact pages
+        uses: actions/upload-pages-artifact@v2
+        with:
+          name: github-pages
+          path: ./docs
+          
+      - name: Check Files
+        run: |
+          tar --dereference --hard-dereference \
+             --directory "$INPUT_PATH" \
+             -cvf "$RUNNER_TEMP/artifact.tar" \
+             --exclude=.git \
+             --exclude=.github \
+              .
+             shell: bash
+             env:
+                 INPUT_PATH: ./docs
 
       - name: Upload  artifact
         uses: actions/upload-artifact@v2
         with:
           name: github-pages
-          path: ./docs
+          path: /home/runner/work/_temp/artifact.tar
+  report:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+      - name: Trigger GitHub Pages Telemetry
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/pages/telemetry" \
+          -F github_run_id="$GITHUB_RUN_ID" \
+          -F conclusion="$CONCLUSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONCLUSION: success
 
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
+    needs: report
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: github-pages
-          path: ./
-      - name: Verify directory
-        run: ls  # Check if 'docs' directory exists and contains files (optional)
-        
+      - name: Check Files
+        run: |
+          tar --dereference --hard-dereference \
+             --directory "$INPUT_PATH" \
+             -cvf "$RUNNER_TEMP/artifact.tar" \
+             --exclude=.git \
+             --exclude=.github \
+              .
+             shell: bash
+             env:
+                 INPUT_PATH: ./docs
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
