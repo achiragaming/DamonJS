@@ -28,7 +28,7 @@ npm i kazagumo-better
 
 ## Metadata
 
-> version: 1.0.5
+> version: 1.0.6
 > pre-release: false  
 > Last build: 8/12/2023 
 
@@ -51,7 +51,8 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 ## Changes
 > - 1.0.3 - Implemented support for plugins from the main Kazagumo package.
 > - 1.0.4 - Bug fixes on readme file.
-> - 1.0.5 - 
+> - 1.0.5 - minor bug fixes.
+> - 1.0.6 - minor bug fixes.
 
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
