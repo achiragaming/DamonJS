@@ -1,22 +1,15 @@
-# Simple workflow for deploying static content to GitHub Pages
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -27,13 +20,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+
       - name: Install Dependencies
         run: npm install
+
       - name: Build Pages
-        run: npm run build:docs    
-          
+        run: npm run build:docs
+
+      - name: Verify 'docs' directory
+        run: ls -l ./docs  # Check if 'docs' directory exists and contains files (optional)
+
+      - name: Upload 'docs' artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: website
+          path: ./docs
+
   deploy:
     environment:
       name: github-pages
@@ -41,11 +43,14 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+      - name: Download 'docs' artifact
+        uses: actions/download-artifact@v2
         with:
-          # Upload entire repository
-          path: './docs'
+          name: website
+          path: ./docs  # Download 'docs' artifact to the current job's workspace
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
       - name: Deploy to GitHub Pages
-        id: deployment
         uses: actions/deploy-pages@v3
