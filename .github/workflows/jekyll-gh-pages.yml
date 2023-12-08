@@ -18,9 +18,6 @@ jobs:
       - name: Build The Docs
         run: |
           npm run build:docs
-          if [ ! -d "docs" ]; then mkdir docs; fi # Create docs folder if not existing
-          # Copy the built files to the docs folder
-          cp -R docs/ * docs/
 
       - name: Deploy to gh-pages
         run: |
