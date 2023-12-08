@@ -55,3 +55,6 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v3
+        with:
+          artifact_name: website  # Update the artifact_name to match the correct name
+          branch: main  # Set the branch name where you want to deploy
