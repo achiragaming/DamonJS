@@ -27,14 +27,14 @@ jobs:
       - name: Build Pages
         run: npm run build:docs
 
-      - name: Verify 'docs' directory
-        run: ls -l ./docs  # Check if 'docs' directory exists and contains files (optional)
+      - name: Verify directory
+        run: ls # Check if 'docs' directory exists and contains files (optional)
 
-      - name: Upload 'docs' artifact
+      - name: Upload  artifact
         uses: actions/upload-artifact@v2
         with:
-          name: website
-          path: ./docs
+          name: github-pages
+          path: ./
 
   deploy:
     environment:
@@ -43,17 +43,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download 'docs' artifact
+      - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: website
-          path: ./docs  # Download 'docs' artifact to the current job's workspace
-      - name: Verify 'docs' directory
-        run: ls -l ./docs  # Check if 'docs' directory exists and contains files (optional)
+          name: github-pages
+          path: ./
+      - name: Verify directory
+        run: ls  # Check if 'docs' directory exists and contains files (optional)
+        
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v3
-        with:
-          artifact_name: website  # Update the artifact_name to match the correct name
