@@ -1,7 +1,7 @@
 # Kazagumo Better
 #### A modified version of [Kazagumo](https://github.com/Takiyo0/Kazagumo) with significant improvements and bug fixes
 
-![AppVeyor](https://img.shields.io/appveyor/build/Takiyo0/kazagumo) ![Downloads](https://img.shields.io/npm/dm/kazagumo-better) ![npm](https://img.shields.io/npm/v/kazagumo-better) ![Code Quality](https://api.codiga.io/project/33922/score/svg) ![Code Rating](https://api.codiga.io/project/33922/status/svg) ![GitHub contributors](https://img.shields.io/github/contributors/NoErrorStudio/kazagumo-better) ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/NoErrorStudio/kazagumo-better) ![GitHub last commit](https://img.shields.io/github/last-commit/NoErrorStudio/kazagumo-better) ![NPM](https://img.shields.io/npm/l/kazagumo-better)  
+![AppVeyor](https://img.shields.io/appveyor/build/Takiyo0/kazagumo) ![Downloads](https://img.shields.io/npm/dm/kazagumo-better) ![npm](https://img.shields.io/npm/v/kazagumo-better) ![GitHub contributors](https://img.shields.io/github/contributors/NoErrorStudio/kazagumo-better) ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/NoErrorStudio/kazagumo-better) ![GitHub last commit](https://img.shields.io/github/last-commit/NoErrorStudio/kazagumo-better) ![NPM](https://img.shields.io/npm/l/kazagumo-better)  
 
 ![Kazagumo Better](https://i.imgur.com/jfVSvHj.png)
 > Kazagumo Better © Azur Lane
@@ -28,7 +28,7 @@ npm i kazagumo-better
 
 ## Metadata
 
-> version: 1.0.6
+> version: 1.0.7
 > pre-release: false  
 > Last build: 8/12/2023 
 
@@ -53,6 +53,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > - 1.0.4 - Bug fixes on readme file.
 > - 1.0.5 - minor bug fixes.
 > - 1.0.6 - minor bug fixes.
+> - 1.0.7 - readme update.
 
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
