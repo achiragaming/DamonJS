@@ -33,18 +33,6 @@ jobs:
           name: github-pages
           path: ./docs
           
-      - name: Check Files
-        run: |
-          tar --dereference --hard-dereference \
-             --directory "$INPUT_PATH" \
-             -cvf "$RUNNER_TEMP/artifact.tar" \
-             --exclude=.git \
-             --exclude=.github \
-              .
-             shell: bash
-             env:
-                 INPUT_PATH: ./docs
-
       - name: Upload  artifact
         uses: actions/upload-artifact@v2
         with:
@@ -70,18 +58,6 @@ jobs:
     needs: report
     runs-on: ubuntu-latest
     steps:
-      - name: Check Files
-        run: |
-          tar --dereference --hard-dereference \
-             --directory "$INPUT_PATH" \
-             -cvf "$RUNNER_TEMP/artifact.tar" \
-             --exclude=.git \
-             --exclude=.github \
-              .
-             shell: bash
-             env:
-                 INPUT_PATH: ./docs
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
