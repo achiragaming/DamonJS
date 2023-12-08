@@ -18,7 +18,7 @@ jobs:
       - name: Build The Docs
         run: |
           npm run build:docs
-          mkdir docs # Create docs folder if not existing
+          if [ ! -d "docs" ]; then mkdir docs; fi # Create docs folder if not existing
           # Copy the built files to the docs folder
           cp -R path_to_build_files/* docs/
 
