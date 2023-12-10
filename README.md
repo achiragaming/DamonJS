@@ -58,6 +58,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > - 1.0.9 - Major bug fixes.
 > - 1.1.0 - Major bug fixes.
 > - 1.1.1 - Readme Update.
+> - 1.1.2 - Readme Update.
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
 > Kazagumo Better support server: https://discord.gg/noerror  
