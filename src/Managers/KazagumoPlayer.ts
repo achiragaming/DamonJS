@@ -119,7 +119,7 @@ export class KazagumoPlayer {
 
       if (this.loop === LoopState.Track) {
         this.queue.currentId = this.queue.currentId;
-      } else if (this.loop === LoopState.Queue && this.queue.isEnd()) {
+      } else if (this.loop === LoopState.Queue && this.queue.isEnd) {
         this.queue.currentId = 0;
       } else if (this.loop === LoopState.None) {
         this.queue.currentId++;

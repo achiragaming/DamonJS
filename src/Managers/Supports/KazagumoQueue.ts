@@ -16,7 +16,10 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
   public get isEmpty() {
     return this.length === 0;
   }
-
+  /** Check if the queue is ended or not */
+  public get isEnd() {
+    return this.size <= this.currentId + 1;
+  }
   /** Get the queue's duration */
   public get durationLength() {
     return this.reduce((acc, cur) => acc + (cur.length || 0), 0);
@@ -54,9 +57,6 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
     return this;
   }
 
-  public isEnd() {
-    return this.size >= this.currentId + 1;
-  }
   /** Shuffle the queue */
   public shuffle(): KazagumoQueue {
     for (let i = this.length - 1; i > 0; i--) {
