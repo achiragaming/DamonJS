@@ -314,12 +314,12 @@ export class KazagumoPlayer {
    * Skip to a specifc track
    * @returns KazagumoPlayer
    */
-  public skipto(number: number): KazagumoPlayer {
+  public skipto(trackId: number): KazagumoPlayer {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    if (!this.queue.at(number)) throw new KazagumoError(1, 'Cannot find the track');
-    let trackId = number - 1;
-    if (this.loop === LoopState.Track) trackId = this.queue.currentId - 1;
-    this.queue.currentId = trackId;
+    if (!this.queue.at(trackId)) throw new KazagumoError(1, 'Cannot find the track');
+    let realTrackId = trackId - 1;
+    if (this.loop === LoopState.Track) realTrackId = this.queue.currentId - 1;
+    this.queue.currentId = realTrackId;
     this.shoukaku.stopTrack();
     return this;
   }
