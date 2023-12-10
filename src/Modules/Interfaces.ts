@@ -3,12 +3,11 @@ import { KazagumoPlayer } from '../Index';
 import { KazagumoTrack } from '../Managers/Supports/KazagumoTrack';
 import { PlayerUpdate, TrackExceptionEvent, TrackStuckEvent, Utils, WebSocketClosedEvent } from 'shoukaku';
 import { Snowflake } from 'discord.js';
-import { KazagumoPlugin as OriginalKazagumoPlugin, Kazagumo as oldKazagumo } from 'kazagumo';
 export interface KazagumoOptions {
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
   /** Kazagumo plugins */
-  plugins?: KazagumoPlugin[] | OriginalKazagumoPlugin[];
+  plugins?: KazagumoPlugin[] ;
   /** Source that will be forced to resolve when playing it */
   sourceForceResolve?: string[];
   /** The track resolver. Make sure you set <KazagumoTrack>.track for it to work. (I'm not responsible for any error during playback if you don't set it right) */
@@ -207,11 +206,11 @@ export enum PlayerState {
 }
 
 export class KazagumoPlugin {
-  public load(kazagumo: Kazagumo | oldKazagumo): void {
+  public load(kazagumo: Kazagumo ): void {
     throw new KazagumoError(1, 'Plugin must implement load()');
   }
 
-  public unload(kazagumo: Kazagumo | oldKazagumo): void {
+  public unload(kazagumo: Kazagumo ): void {
     throw new KazagumoError(1, 'Plugin must implement unload()');
   }
 }

@@ -33,7 +33,7 @@ npm i kazagumo-better
 > Last build: 8/12/2023 
 
 ## Plugins
-- Official [spotify plugin](https://npmjs.com/package/kazagumo-spotify)
+- Official [spotify plugin](https://npmjs.com/package/kazagumo-better-spotify)
 > npm i kazagumo-spotify
 - Stone-Deezer [deezer plugin](https://www.npmjs.com/package/stone-deezer)
 > npm i stone-deezer
@@ -57,6 +57,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > - 1.0.8 - Queue System Changed, Now songs will not remove after a song played, Each time song ends the queue has a property called currentId and currentId will add 1 after that if there is no current in queue it will fire playerEmpty event otherWise it will fire PlayerEnd, Now you can jump through anysong in the queue by using skipTo function 
 > - 1.0.9 - Major bug fixes.
 > - 1.1.0 - Major bug fixes.
+> - 1.1.1 - Readme Update.
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
 > Kazagumo Better support server: https://discord.gg/noerror  
