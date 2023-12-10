@@ -3,7 +3,7 @@ import { KazagumoPlayer } from '../Index';
 import { KazagumoTrack } from '../Managers/Supports/KazagumoTrack';
 import { PlayerUpdate, TrackExceptionEvent, TrackStuckEvent, Utils, WebSocketClosedEvent } from 'shoukaku';
 import { Snowflake } from 'discord.js';
-import {KazagumoPlugin as OriginalKazagumoPlugin , Kazagumo as oldKazagumo}  from 'kazagumo'
+import { KazagumoPlugin as OriginalKazagumoPlugin, Kazagumo as oldKazagumo } from 'kazagumo';
 export interface KazagumoOptions {
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
@@ -100,7 +100,7 @@ export interface RawTrack {
   };
 }
 
-export interface KazagumoEvents  {
+export interface KazagumoEvents {
   playerDestroy: [player: KazagumoPlayer];
   playerCreate: [player: KazagumoPlayer];
   playerStart: [player: KazagumoPlayer, track: KazagumoTrack];
@@ -141,6 +141,12 @@ export enum PlayerMovedState {
   Joined = 'JOINED',
   Left = 'LEFT',
   Moved = 'MOVED',
+}
+
+export enum LoopState {
+  Track = 'track',
+  Queue = 'queue',
+  None = 'none',
 }
 
 export interface KazagumoSearchOptions {
@@ -201,15 +207,14 @@ export enum PlayerState {
 }
 
 export class KazagumoPlugin {
-  public load(kazagumo: Kazagumo |oldKazagumo): void {
+  public load(kazagumo: Kazagumo | oldKazagumo): void {
     throw new KazagumoError(1, 'Plugin must implement load()');
   }
 
-  public unload(kazagumo: Kazagumo|oldKazagumo): void {
+  public unload(kazagumo: Kazagumo | oldKazagumo): void {
     throw new KazagumoError(1, 'Plugin must implement unload()');
   }
 }
-
 
 /* tslint:disable:max-classes-per-file */
 export class KazagumoError extends Error {

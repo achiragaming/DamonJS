@@ -22,11 +22,10 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
     return this.reduce((acc, cur) => acc + (cur.length || 0), 0);
   }
 
-  /** Current playing track */
-  public current: KazagumoTrack | undefined | null = null;
-  /** Previous playing track */
-  public previous: KazagumoTrack | undefined | null = null;
+  /** Current playing trackId */
+  public currentId: number = 0;
 
+  public current: KazagumoTrack | undefined = this.at(this.currentId);
   /**
    * Add track(s) to the queue
    * @param track KazagumoTrack to add
@@ -36,14 +35,6 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
     if (Array.isArray(track) && track.some((t) => !(t instanceof KazagumoTrack)))
       throw new KazagumoError(1, 'Track must be an instance of KazagumoTrack');
     if (!Array.isArray(track) && !(track instanceof KazagumoTrack)) track = [track];
-
-    if (!this.current) {
-      if (Array.isArray(track)) this.current = track.shift();
-      else {
-        this.current = track;
-        return this;
-      }
-    }
 
     if (Array.isArray(track)) for (const t of track) this.push(t);
     else this.push(track);
@@ -63,6 +54,9 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
     return this;
   }
 
+  public isEnd() {
+    return this.size >= this.currentId + 1;
+  }
   /** Shuffle the queue */
   public shuffle(): KazagumoQueue {
     for (let i = this.length - 1; i > 0; i--) {

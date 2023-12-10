@@ -18,6 +18,7 @@ import {
   KazagumoSearchOptions,
   KazagumoSearchResult,
   KazagumoEvents,
+  LoopState,
 } from '../Modules/Interfaces';
 import { KazagumoTrack } from './Supports/KazagumoTrack';
 import { Snowflake } from 'discord.js';
@@ -66,7 +67,7 @@ export class KazagumoPlayer {
   /**
    * Loop status
    */
-  public loop: 'none' | 'queue' | 'track' = 'none';
+  public loop: LoopState = LoopState.None;
   /**
    * Search track/s
    */
@@ -96,7 +97,6 @@ export class KazagumoPlayer {
     this.voiceId = options.voiceId;
     this.textId = options.textId;
     this.queue = new KazagumoQueue();
-
     if (options.volume !== 100) this.setVolume(options.volume);
 
     this.search = (typeof this.options.searchWithSameNode === 'boolean' ? this.options.searchWithSameNode : true)
@@ -116,26 +116,20 @@ export class KazagumoPlayer {
         return this.emit(Events.Debug, `Player ${this.guildId} destroyed from end event`);
 
       if (data.reason === 'REPLACED') return this.emit(Events.PlayerEnd, this);
-      if (['LOAD_FAILED', 'CLEAN_UP'].includes(data.reason)) {
-        this.queue.previous = this.queue.current;
-        this.playing = false;
-        if (!this.queue.length) return this.emit(Events.PlayerEmpty, this);
-        this.emit(Events.PlayerEnd, this, this.queue.current);
-        this.queue.current = null;
-        return this.play();
+
+      if (this.loop === LoopState.Track) {
+        this.queue.currentId = this.queue.currentId;
+      } else if (this.loop === LoopState.Queue && this.queue.isEnd()) {
+        this.queue.currentId = 0;
+      } else if (this.loop === LoopState.None) {
+        this.queue.currentId++;
       }
 
-      if (this.loop === 'track' && this.queue.current) this.queue.unshift(this.queue.current);
-      if (this.loop === 'queue' && this.queue.current) this.queue.push(this.queue.current);
-
-      this.queue.previous = this.queue.current;
-      const currentSong = this.queue.current;
-      this.queue.current = null;
-
-      if (this.queue.length) this.emit(Events.PlayerEnd, this, currentSong);
-      else {
+      if (!this.queue.current) {
         this.playing = false;
         return this.emit(Events.PlayerEmpty, this);
+      } else {
+        this.emit(Events.PlayerEnd, this, this.queue.current);
       }
 
       return this.play();
@@ -244,20 +238,20 @@ export class KazagumoPlayer {
    * @param [loop] Loop mode
    * @returns KazagumoPlayer
    */
-  public setLoop(loop?: 'none' | 'queue' | 'track'): KazagumoPlayer {
+  public setLoop(loop?: LoopState): KazagumoPlayer {
     if (loop === undefined) {
-      if (this.loop === 'none') this.loop = 'queue';
-      else if (this.loop === 'queue') this.loop = 'track';
-      else if (this.loop === 'track') this.loop = 'none';
+      if (this.loop === LoopState.None) this.loop = LoopState.Queue;
+      else if (this.loop === LoopState.Queue) this.loop = LoopState.Track;
+      else if (this.loop === LoopState.Track) this.loop = LoopState.None;
       return this;
     }
 
-    if (loop === 'none' || loop === 'queue' || loop === 'track') {
+    if (loop === LoopState.None || loop === LoopState.Queue || loop === LoopState.Track) {
       this.loop = loop;
       return this;
     }
 
-    throw new KazagumoError(1, "loop must be one of 'none', 'queue', 'track'");
+    throw new KazagumoError(1, `loop must be one of 'none', 'queue', 'track'`);
   }
 
   /**
@@ -276,10 +270,8 @@ export class KazagumoPlayer {
     if (!options || typeof options.replaceCurrent !== 'boolean') options = { ...options, replaceCurrent: false };
 
     if (track) {
-      if (!options.replaceCurrent && this.queue.current) this.queue.unshift(this.queue.current);
-      this.queue.current = track;
-    } else if (!this.queue.current) this.queue.current = this.queue.shift();
-
+      this.queue.splice(this.queue.currentId, options.replaceCurrent && this.queue.current ? 1 : 0, track);
+    }
     if (!this.queue.current) throw new KazagumoError(1, 'No track is available to play');
 
     const current = this.queue.current;
@@ -294,10 +286,8 @@ export class KazagumoPlayer {
 
     if (!resolveResult) {
       this.emit(Events.PlayerResolveError, this, current, errorMessage);
-      this.emit(Events.Debug, `Player ${this.guildId} resolve error: ${errorMessage}`);
-      this.queue.current = null;
-      this.queue.size ? await this.play() : this.emit(Events.PlayerEmpty, this);
-      return this;
+      this.emit(Events.Debug, `Player ${this.guildId} resolve error: ${errorMessage} skipping`);
+      return this.skip();
     }
 
     const playOptions = { track: current.track, options: {} };
@@ -320,7 +310,19 @@ export class KazagumoPlayer {
 
     return this;
   }
-
+  /**
+   * Skip to a specifc track
+   * @returns KazagumoPlayer
+   */
+  public skipto(number: number): KazagumoPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+    if (!this.queue.at(number)) throw new KazagumoError(1, 'Cannot find the track');
+    let trackId = number - 1;
+    if (this.loop === LoopState.Track) trackId = this.queue.currentId - 1;
+    this.queue.currentId = trackId;
+    this.shoukaku.stopTrack();
+    return this;
+  }
   /**
    *
    */
