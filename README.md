@@ -56,6 +56,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > - 1.0.7 - readme update.
 > - 1.0.8 - Queue System Changed, Now songs will not remove after a song played, Each time song ends the queue has a property called currentId and currentId will add 1 after that if there is no current in queue it will fire playerEmpty event otherWise it will fire PlayerEnd, Now you can jump through anysong in the queue by using skipTo function 
 > - 1.0.9 - Major bug fixes.
+> - 1.1.0 - Major bug fixes.
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
 > Kazagumo Better support server: https://discord.gg/noerror  

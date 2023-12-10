@@ -1,6 +1,6 @@
 {
   "name": "kazagumo-better",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "A modified Shoukaku wrapper with enhanced queue support.",
   "main": "dist/Index.js",
   "types": "dist/Index.d.ts",

@@ -28,7 +28,9 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
   /** Current playing trackId */
   public currentId: number = 0;
 
-  public current: KazagumoTrack | undefined = this.at(this.currentId);
+  public get current(): KazagumoTrack | undefined {
+    return this.at(this.currentId);
+  }
   /**
    * Add track(s) to the queue
    * @param track KazagumoTrack to add
