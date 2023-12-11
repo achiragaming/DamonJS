@@ -18,7 +18,7 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
   }
   /** Check if the queue is ended or not */
   public get isEnd() {
-    return this.size <= this.currentId + 1;
+    return this.length <= this.currentId + 1;
   }
   /** Get the queue's duration */
   public get durationLength() {
