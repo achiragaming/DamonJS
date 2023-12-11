@@ -125,9 +125,11 @@ export class KazagumoPlayer {
         this.queue.currentId++;
       }
 
+      if (!this.queue.current) this.queue.currentId = 0;
+
       if (!this.queue.current) {
         this.playing = false;
-        this.queue.clear()
+        this.queue.clear();
         return this.emit(Events.PlayerEmpty, this);
       } else {
         this.emit(Events.PlayerEnd, this, this.queue.current);
@@ -305,16 +307,20 @@ export class KazagumoPlayer {
    * @returns KazagumoPlayer
    */
   public skip(): KazagumoPlayer {
-    if (this.queue.currentId >= this.queue.size) throw new Error(`No songs available for skip.`);
-    return this.skipto(this.queue.currentId + 1);
+    let trackId = this.queue.currentId + 1;
+    if (!this.queue.at(trackId)) trackId = 0;
+    if (!this.queue.at(trackId)) throw new Error(`No songs available for skip.`);
+    return this.skipto(trackId);
   }
   /**
    * Skip to previous track
    * @returns KazagumoPlayer
    */
   public previous(): KazagumoPlayer {
-    if (this.queue.currentId <= 0) throw new Error(`No songs available for previous.`);
-    return this.skipto(this.queue.currentId - 1);
+    let trackId = this.queue.currentId - 1;
+    if (!this.queue.at(trackId)) trackId = this.queue.length - 1;
+    if (!this.queue.at(trackId)) throw new Error(`No songs available for previous.`);
+    return this.skipto(trackId);
   }
   /**
    * Skip to a specifc track

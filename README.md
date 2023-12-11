@@ -65,6 +65,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > - 1.1.6 - none.
 > - 1.1.7 - small bug fix.
 > - 1.1.8 - Fixed queue bugs.
+> - 1.2.0 - Fixed queue bugs.
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
 > Kazagumo Better support server: https://discord.gg/noerror  
