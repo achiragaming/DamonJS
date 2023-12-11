@@ -125,8 +125,6 @@ export class KazagumoPlayer {
         this.queue.currentId++;
       }
 
-      if (!this.queue.current) this.queue.currentId = 0;
-
       if (!this.queue.current) {
         this.playing = false;
         this.queue.clear();
@@ -328,7 +326,7 @@ export class KazagumoPlayer {
    */
   public skipto(trackId: number): KazagumoPlayer {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    if (trackId < 0 || trackId > this.queue.size) throw new Error(`${trackId} is an invalid track ID.`);
+    if (!this.queue[trackId]) throw new Error(`${trackId} is an invalid track ID.`);
     let realTrackId = trackId - 1;
     if (this.loop === LoopState.Track) realTrackId = this.queue.currentId - 1;
     this.queue.currentId = realTrackId;
