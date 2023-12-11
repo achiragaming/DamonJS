@@ -304,6 +304,7 @@ export class KazagumoPlayer {
    * @returns KazagumoPlayer
    */
   public skip(): KazagumoPlayer {
+    if (this.queue.currentId >= this.queue.size) throw new Error(`No songs available for skip.`);
     return this.skipto(this.queue.currentId + 1);
   }
   /**
@@ -311,6 +312,7 @@ export class KazagumoPlayer {
    * @returns KazagumoPlayer
    */
   public previous(): KazagumoPlayer {
+    if (this.queue.currentId <= 0) throw new Error(`No songs available for previous.`);
     return this.skipto(this.queue.currentId - 1);
   }
   /**
@@ -319,6 +321,7 @@ export class KazagumoPlayer {
    */
   public skipto(trackId: number): KazagumoPlayer {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+    if (trackId < 0 && trackId > this.queue.size) throw new Error(`${trackId} is an invalid track ID.`);
     let realTrackId = trackId - 1;
     if (this.loop === LoopState.Track) realTrackId = this.queue.currentId - 1;
     this.queue.currentId = realTrackId;
