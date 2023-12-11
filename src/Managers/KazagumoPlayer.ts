@@ -304,11 +304,14 @@ export class KazagumoPlayer {
    * @returns KazagumoPlayer
    */
   public skip(): KazagumoPlayer {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-
-    this.shoukaku.stopTrack();
-
-    return this;
+    return this.skipto(this.queue.currentId + 1);
+  }
+  /**
+   * Skip to previous track
+   * @returns KazagumoPlayer
+   */
+  public previous(): KazagumoPlayer {
+    return this.skipto(this.queue.currentId - 1);
   }
   /**
    * Skip to a specifc track
