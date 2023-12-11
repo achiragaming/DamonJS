@@ -127,6 +127,7 @@ export class KazagumoPlayer {
 
       if (!this.queue.current) {
         this.playing = false;
+        this.queue.clear()
         return this.emit(Events.PlayerEmpty, this);
       } else {
         this.emit(Events.PlayerEnd, this, this.queue.current);
@@ -348,7 +349,6 @@ export class KazagumoPlayer {
       guildId: this.guildId,
       position,
     });
-
     return this;
   }
 

@@ -77,6 +77,7 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
   }
   /** Clear the queue */
   public clear(): KazagumoQueue {
+    this.currentId = 0;
     this.splice(0, this.length);
     return this;
   }
