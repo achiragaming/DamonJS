@@ -28,6 +28,7 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
   /** Current playing trackId */
   public currentId: number = 0;
 
+  /**Current playing track */
   public get current(): KazagumoTrack | undefined {
     return this.at(this.currentId);
   }
@@ -61,13 +62,19 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
 
   /** Shuffle the queue */
   public shuffle(): KazagumoQueue {
-    for (let i = this.length - 1; i > 0; i--) {
+    const unplayedSongs = this.slice(this.currentId + 1); // Get unplayed songs after the current song
+
+    for (let i = unplayedSongs.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [this[i], this[j]] = [this[j], this[i]];
+      [unplayedSongs[i], unplayedSongs[j]] = [unplayedSongs[j], unplayedSongs[i]];
     }
+
+    // Reconstruct the queue with the shuffled unplayed songs after the current song
+    const newQueue = [...this.slice(0, this.currentId + 1), ...unplayedSongs];
+    this.splice(0, this.length, ...newQueue);
+
     return this;
   }
-
   /** Clear the queue */
   public clear(): KazagumoQueue {
     this.splice(0, this.length);

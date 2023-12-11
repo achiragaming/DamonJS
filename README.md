@@ -61,6 +61,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > - 1.1.2 - Readme Update.
 > - 1.1.3 - Fix some issues on skipto.
 > - 1.1.4 - Added previous.
+> - 1.1.5 - Queue Shuffle Major Update.
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
 > Kazagumo Better support server: https://discord.gg/noerror  
