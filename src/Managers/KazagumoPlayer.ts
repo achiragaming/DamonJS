@@ -5,9 +5,12 @@ import {
   Node,
   WebSocketClosedEvent,
   TrackExceptionEvent,
+  FilterOptions,
   PlayerUpdate,
-  Filters,
+  TrackEndReason,
   TrackStuckEvent,
+  LoadType,
+  Connection,
 } from 'shoukaku';
 import {
   KazagumoError,
@@ -19,6 +22,8 @@ import {
   KazagumoSearchResult,
   KazagumoEvents,
   LoopState,
+  SourceIDs,
+  SearchResultTypes,
 } from '../Modules/Interfaces';
 import { KazagumoTrack } from './Supports/KazagumoTrack';
 import { Snowflake } from 'discord.js';
@@ -37,17 +42,9 @@ export class KazagumoPlayer {
    */
   public shoukaku: Player;
   /**
-   * The guild ID of the player
+   * Shoukaku's Connection instance
    */
-  public readonly guildId: Snowflake;
-  /**
-   * The voice channel ID of the player
-   */
-  public voiceId: Snowflake | null;
-  /**
-   * The text channel ID of the player
-   */
-  public textId: Snowflake;
+  public connection: Connection;
   /**
    * Player's queue
    */
@@ -57,56 +54,36 @@ export class KazagumoPlayer {
    */
   public state: PlayerState = PlayerState.CONNECTING;
   /**
-   * Paused state of the player
-   */
-  public paused: boolean = false;
-  /**
-   * Whether the player is playing or not
-   */
-  public playing: boolean = false;
-  /**
    * Loop status
    */
   public loop: LoopState = LoopState.None;
   /**
-   * Search track/s
-   */
-  public search: (query: string, options?: KazagumoSearchOptions) => Promise<KazagumoSearchResult>;
-  /**
    * Player's custom data
    */
-  public readonly data: Map<string, any> = new Map();
-
+  public readonly data: Map<string, any>;
   /**
-   * Initialize the player
    * @param kazagumo Kazagumo instance
+   * @param connection Shoukaku's Connection instance
    * @param player Shoukaku's Player instance
    * @param options Kazagumo options
-   * @param customData private readonly customData
    */
-  constructor(
-    kazagumo: Kazagumo,
-    player: Player,
-    options: KazagumoPlayerOptions,
-    private readonly customData: unknown,
-  ) {
+  constructor(kazagumo: Kazagumo, player: Player, connection: Connection, options: KazagumoPlayerOptions) {
     this.options = options;
     this.kazagumo = kazagumo;
     this.shoukaku = player;
-    this.guildId = options.guildId;
-    this.voiceId = options.voiceId;
-    this.textId = options.textId;
+    this.connection = connection;
     this.queue = new KazagumoQueue();
-    if (options.volume !== 100) this.setVolume(options.volume);
+    this.data = new Map(options.data);
+  }
 
-    this.search = (typeof this.options.searchWithSameNode === 'boolean' ? this.options.searchWithSameNode : true)
-      ? (query: string, opt?: KazagumoSearchOptions) =>
-          kazagumo.search.bind(kazagumo)(query, opt ? { ...opt, nodeName: this.shoukaku.node.name } : undefined)
-      : kazagumo.search.bind(kazagumo);
-
+  /**
+   * Initialize the player
+   */
+  public async init() {
+    if (this.state === PlayerState.CONNECTED) throw new KazagumoError(1, 'Player is already initialized or initiazing');
+    await this.setGlobalVolume(this.options.volume);
     this.shoukaku.on('start', () => {
       if (!this.queue.current) return;
-      this.playing = true;
       this.emit(Events.PlayerStart, this, this.queue.current);
     });
 
@@ -115,7 +92,7 @@ export class KazagumoPlayer {
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
         return this.emit(Events.Debug, `Player ${this.guildId} destroyed from end event`);
 
-      if (data.reason === 'REPLACED') return this.emit(Events.PlayerEnd, this);
+      if (data.reason === 'replaced') return this.emit(Events.PlayerEnd, this);
 
       if (this.loop === LoopState.Track) {
         this.queue.currentId = this.queue.currentId;
@@ -126,7 +103,6 @@ export class KazagumoPlayer {
       }
 
       if (!this.queue.current) {
-        this.playing = false;
         this.queue.clear();
         return this.emit(Events.PlayerEmpty, this);
       } else {
@@ -136,28 +112,69 @@ export class KazagumoPlayer {
       return this.play();
     });
 
-    this.shoukaku.on('closed', (data: WebSocketClosedEvent) => {
-      this.playing = false;
-      this.emit(Events.PlayerClosed, this, data);
-    });
+    this.shoukaku.on('closed', (data: WebSocketClosedEvent) => this.emit(Events.PlayerClosed, this, data));
 
-    this.shoukaku.on('exception', (data: TrackExceptionEvent) => {
-      this.playing = false;
-      this.emit(Events.PlayerException, this, data);
-    });
+    this.shoukaku.on('exception', (data: TrackExceptionEvent) => this.emit(Events.PlayerException, this, data));
 
-    this.shoukaku.on('update', (data: PlayerUpdate) => this.emit(Events.PlayerUpdate, this, data));
+    this.shoukaku.on('update', (data: PlayerUpdate) => {
+      if (!this.queue.current) return;
+      this.queue.current.position = data.state.position || 0;
+      this.emit(Events.PlayerUpdate, this, data);
+    });
     this.shoukaku.on('stuck', (data: TrackStuckEvent) => this.emit(Events.PlayerStuck, this, data));
     this.shoukaku.on('resumed', () => this.emit(Events.PlayerResumed, this));
+
+    this.state = PlayerState.CONNECTED;
   }
 
+  /**
+   * Get GuildId
+   */
+  public get guildId(): string {
+    return this.connection.guildId;
+  }
+  /**
+   * Get VoiceId
+   */
+  public get voiceId(): string | null {
+    return this.connection.channelId;
+  }
+  /**
+   * Get Deaf Status
+   */
+  public get deaf(): boolean {
+    return this.connection.deafened;
+  }
+  /**
+   * Get Playing Status
+   */
+  public get playing(): boolean {
+    return !this.shoukaku.paused;
+  }
+  /**
+   * Get Paused Status
+   */
+  public get paused(): boolean {
+    return this.shoukaku.paused;
+  }
+  /**
+   * Get Mute Status
+   */
+  public get mute(): boolean {
+    return this.connection.muted;
+  }
   /**
    * Get volume
    */
   public get volume(): number {
+    return this.shoukaku.volume;
+  }
+  /**
+   * Get Filter volume
+   */
+  public get filterVolume(): number | undefined {
     return this.shoukaku.filters.volume;
   }
-
   /**
    * Get player position
    */
@@ -168,7 +185,7 @@ export class KazagumoPlayer {
   /**
    * Get filters
    */
-  public get filters(): Filters {
+  public get filters(): FilterOptions {
     return this.shoukaku.filters;
   }
 
@@ -176,60 +193,17 @@ export class KazagumoPlayer {
     return this.shoukaku.node;
   }
 
-  private send(...args: any): void {
-    this.node.queue.add(...args);
-  }
-
   /**
    * Pause the player
    * @param pause Whether to pause or not
-   * @returns KazagumoPlayer
+   * @returns Promise<KazagumoPlayer>
    */
-  public pause(pause: boolean): KazagumoPlayer {
+  public async pause(pause: boolean): Promise<KazagumoPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     if (typeof pause !== 'boolean') throw new KazagumoError(1, 'pause must be a boolean');
 
     if (this.paused === pause || !this.queue.totalSize) return this;
-    this.paused = pause;
-    this.playing = !pause;
-    this.shoukaku.setPaused(pause);
-
-    return this;
-  }
-
-  /**
-   * Set text channel
-   * @param textId Text channel ID
-   * @returns KazagumoPlayer
-   */
-  public setTextChannel(textId: Snowflake): KazagumoPlayer {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-
-    this.textId = textId;
-
-    return this;
-  }
-
-  /**
-   * Set voice channel and move the player to the voice channel
-   * @param voiceId Voice channel ID
-   * @returns KazagumoPlayer
-   */
-  public setVoiceChannel(voiceId: Snowflake): KazagumoPlayer {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    this.state = PlayerState.CONNECTING;
-
-    this.voiceId = voiceId;
-    this.kazagumo.KazagumoOptions.send(this.guildId, {
-      op: 4,
-      d: {
-        guild_id: this.guildId,
-        channel_id: this.voiceId,
-        self_mute: false,
-        self_deaf: this.options.deaf,
-      },
-    });
-
-    this.emit(Events.Debug, `Player ${this.guildId} moved to voice channel ${voiceId}`);
+    await this.shoukaku.setPaused(pause);
 
     return this;
   }
@@ -240,6 +214,7 @@ export class KazagumoPlayer {
    * @returns KazagumoPlayer
    */
   public setLoop(loop?: LoopState): KazagumoPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     if (loop === undefined) {
       if (this.loop === LoopState.None) this.loop = LoopState.Queue;
       else if (this.loop === LoopState.Queue) this.loop = LoopState.Track;
@@ -259,7 +234,7 @@ export class KazagumoPlayer {
    * Play a track
    * @param track Track to play
    * @param options Play options
-   * @returns KazagumoPlayer
+   * @returns Promise<KazagumoPlayer>
    */
   public async play(track?: KazagumoTrack, options?: PlayOptions): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
@@ -280,7 +255,7 @@ export class KazagumoPlayer {
 
     let errorMessage: string | undefined;
 
-    const resolveResult = await current.resolve({ player: this as KazagumoPlayer }).catch((e) => {
+    const resolveResult = await current.resolve({ player: this }).catch((e) => {
       errorMessage = e.message;
       return null;
     });
@@ -291,52 +266,60 @@ export class KazagumoPlayer {
       return this.skip();
     }
 
-    const playOptions = { track: current.track, options: {} };
+    const playOptions = { track: current.encoded, options: {} };
     if (options) playOptions.options = { ...options, noReplace: false };
     else playOptions.options = { noReplace: false };
 
-    this.shoukaku.playTrack(playOptions);
+    await this.shoukaku.playTrack(playOptions);
 
     return this;
   }
 
   /**
    * Skip the current track
-   * @returns KazagumoPlayer
+   * @returns Promise<KazagumoPlayer>
    */
-  public skip(): KazagumoPlayer {
+  public skip(): Promise<KazagumoPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     let trackId = this.queue.currentId + 1;
     if (!this.queue[trackId]) trackId = 0;
     if (!this.queue[trackId]) throw new Error(`No songs available for skip.`);
     return this.skipto(trackId);
   }
+
   /**
-   * Skip to previous track
-   * @returns KazagumoPlayer
+   * Skip to the previous track
+   * @returns Promise<KazagumoPlayer>
    */
-  public previous(): KazagumoPlayer {
+  public async previous(): Promise<KazagumoPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     let trackId = this.queue.currentId - 1;
     if (!this.queue[trackId]) trackId = this.queue.length - 1;
     if (!this.queue[trackId]) throw new Error(`No songs available for previous.`);
     return this.skipto(trackId);
   }
+
   /**
    * Skip to a specifc track
-   * @returns KazagumoPlayer
+   * @param trackId Id of the Track
+   * @returns Promise<KazagumoPlayer>
    */
-  public skipto(trackId: number): KazagumoPlayer {
+  public async skipto(trackId: number): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     if (!this.queue[trackId]) throw new Error(`${trackId} is an invalid track ID.`);
     let realTrackId = trackId - 1;
     if (this.loop === LoopState.Track) realTrackId = this.queue.currentId - 1;
     this.queue.currentId = realTrackId;
-    this.shoukaku.stopTrack();
+    await this.shoukaku.stopTrack();
     return this;
   }
+
   /**
-   *
+   * seek to a specifc position
+   * @param position Position
+   * @returns Promise<KazagumoPlayer>
    */
-  public seek(position: number): KazagumoPlayer {
+  public async seek(position: number): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     if (!this.queue.current) throw new KazagumoError(1, "Player has no current track in it's queue");
     if (!this.queue.current.isSeekable) throw new KazagumoError(1, "The current track isn't seekable");
@@ -347,109 +330,162 @@ export class KazagumoPlayer {
     if (position < 0 || position > (this.queue.current.length ?? 0))
       position = Math.max(Math.min(position, this.queue.current.length ?? 0), 0);
 
-    this.queue.current.position = position;
-    this.send({
-      op: 'seek',
-      guildId: this.guildId,
-      position,
-    });
+    await this.shoukaku.seekTo(position);
     return this;
   }
 
   /**
-   * Set the volume
+   * Set the Global volume
    * @param volume Volume
-   * @returns KazagumoPlayer
+   * @returns Promise<KazagumoPlayer>
    */
-  public setVolume(volume: number): KazagumoPlayer {
+  public async setGlobalVolume(volume: number): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     if (isNaN(volume)) throw new KazagumoError(1, 'volume must be a number');
-
-    this.shoukaku.filters.volume = volume / 100;
-
-    this.send({
-      op: 'volume',
-      guildId: this.guildId,
-      volume: this.shoukaku.filters.volume * 100,
-    });
-
+    await this.shoukaku.setGlobalVolume(volume);
     return this;
   }
 
   /**
-   * Connect to the voice channel
+   * Set the Filter volume
+   * @param volume Volume
+   * @returns Promise<KazagumoPlayer>
+   */
+  public async setFilterVolume(volume: number): Promise<KazagumoPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+    if (isNaN(volume)) throw new KazagumoError(1, 'volume must be a number');
+    await this.shoukaku.setFilterVolume(volume / 100);
+    return this;
+  }
+
+  /**
+   * Set voice channel and move the player to the voice channel
+   * @param voiceId Voice channel ID
    * @returns KazagumoPlayer
    */
-  public connect(): KazagumoPlayer {
+  public setVoiceChannel(voiceId: Snowflake): KazagumoPlayer {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    if (this.state === PlayerState.CONNECTED || !!this.voiceId)
-      throw new KazagumoError(1, 'Player is already connected');
     this.state = PlayerState.CONNECTING;
 
-    this.kazagumo.KazagumoOptions.send(this.guildId, {
-      op: 4,
-      d: {
-        guild_id: this.guildId,
-        channel_id: this.voiceId,
-        self_mute: false,
-        self_deaf: this.options.deaf,
+    this.connection.channelId = voiceId;
+
+    this.connection.manager.connector.sendPacket(
+      this.connection.shardId,
+      {
+        op: 4,
+        d: { guild_id: this.guildId, channel_id: this.voiceId, self_deaf: this.deaf, self_mute: this.mute },
       },
-    });
+      false,
+    );
 
     this.state = PlayerState.CONNECTED;
-
-    this.emit(Events.Debug, `Player ${this.guildId} connected`);
+    this.emit(Events.Debug, `Player ${this.guildId} moved to voice channel ${voiceId}`);
 
     return this;
   }
 
   /**
-   * Disconnect from the voice channel
+   * Set the Mute State
+   * @param mute Mute State
    * @returns KazagumoPlayer
    */
-  public disconnect(): KazagumoPlayer {
-    if (this.state === PlayerState.DISCONNECTED || !this.voiceId)
-      throw new KazagumoError(1, 'Player is already disconnected');
-    this.state = PlayerState.DISCONNECTING;
-
-    this.pause(true);
-    this.kazagumo.KazagumoOptions.send(this.guildId, {
-      op: 4,
-      d: {
-        guild_id: this.guildId,
-        channel_id: null,
-        self_mute: false,
-        self_deaf: false,
-      },
-    });
-
-    this.voiceId = null;
-    this.state = PlayerState.DISCONNECTED;
-
-    this.emit(Events.Debug, `Player disconnected; Guild id: ${this.guildId}`);
-
+  public setMute(mute?: boolean): KazagumoPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+    this.connection.setMute(mute);
+    return this;
+  }
+  /**
+   * Set the Deaf State
+   * @param deaf Deaf State
+   * @returns KazagumoPlayer
+   */
+  public setDeaf(deaf?: boolean): KazagumoPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+    this.connection.setDeaf(deaf);
     return this;
   }
 
   /**
    * Destroy the player
-   * @returns KazagumoPlayer
+   * @returns Promise<KazagumoPlayer>
    */
-  destroy(): KazagumoPlayer {
+  async destroy(): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
       throw new KazagumoError(1, 'Player is already destroyed');
 
-    this.disconnect();
     this.state = PlayerState.DESTROYING;
-    this.shoukaku.connection.disconnect();
+    await this.shoukaku.destroyPlayer();
     this.shoukaku.removeAllListeners();
     this.kazagumo.players.delete(this.guildId);
     this.state = PlayerState.DESTROYED;
-
     this.emit(Events.PlayerDestroy, this);
     this.emit(Events.Debug, `Player destroyed; Guild id: ${this.guildId}`);
 
     return this;
+  }
+
+  /**
+   * Search a track by query or uri.
+   * @param query Query
+   * @param options KazagumoOptions
+   * @returns Promise<KazagumoSearchResult>
+   */
+  public async search(query: string, options?: KazagumoSearchOptions): Promise<KazagumoSearchResult> {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+
+    const source = (SourceIDs as any)[
+      (options?.engine && ['youtube', 'youtube_music', 'soundcloud'].includes(options.engine)
+        ? options.engine
+        : null) ||
+        (!!this.kazagumo.KazagumoOptions.defaultSearchEngine &&
+        ['youtube', 'youtube_music', 'soundcloud'].includes(this.kazagumo.KazagumoOptions.defaultSearchEngine!)
+          ? this.kazagumo.KazagumoOptions.defaultSearchEngine
+          : null) ||
+        'youtube'
+    ];
+
+    const isUrl = /^https?:\/\/.*/.test(query);
+
+    const result = await this.node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
+
+    if (result?.loadType === LoadType.TRACK) {
+      return this.buildSearch(undefined, [new KazagumoTrack(result.data, options?.requester)], SearchResultTypes.Track);
+    } else if (result?.loadType === LoadType.PLAYLIST) {
+      return this.buildSearch(
+        result.data,
+        result.data.tracks.map((track) => new KazagumoTrack(track, options?.requester)),
+        SearchResultTypes.Playlist,
+      );
+    } else if (result?.loadType === LoadType.SEARCH) {
+      return this.buildSearch(
+        undefined,
+        result.data.map((track) => new KazagumoTrack(track, options?.requester)),
+        SearchResultTypes.Search,
+      );
+    } else if (result?.loadType === LoadType.EMPTY) {
+      return this.buildSearch(undefined, [], SearchResultTypes.Empty);
+    } else {
+      return this.buildSearch(undefined, undefined, SearchResultTypes.Empty);
+    }
+  }
+
+  private buildSearch(
+    playlistInfo?: {
+      encoded: string;
+      info: {
+        name: string;
+        selectedTrack: number;
+      };
+      pluginInfo: unknown;
+    },
+    tracks: KazagumoTrack[] = [],
+    type?: SearchResultTypes,
+  ): KazagumoSearchResult {
+    return {
+      playlistInfo,
+      tracks,
+      type: type ?? SearchResultTypes.Search,
+    };
   }
 
   private emit<K extends keyof KazagumoEvents>(event: K, ...args: KazagumoEvents[K]): void {

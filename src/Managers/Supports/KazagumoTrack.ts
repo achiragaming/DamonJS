@@ -11,6 +11,7 @@ import {
 import { Track } from 'shoukaku';
 import { KazagumoPlayer } from '../KazagumoPlayer';
 import { KazagumoUtils } from '../../Modules/Utils';
+import { Utils } from 'discord.js';
 
 export class KazagumoTrack {
   /**
@@ -23,13 +24,13 @@ export class KazagumoTrack {
   public requester: unknown | undefined;
 
   /** Track's Base64 */
-  public track: string;
+  public encoded: string;
   /** Track's source */
   public sourceName: string;
   /** Track's title */
   public title: string;
   /** Track's URI */
-  public uri: string;
+  public uri: string | undefined;
   /** Track's identifier */
   public identifier: string;
   /** Whether the track is seekable */
@@ -37,22 +38,27 @@ export class KazagumoTrack {
   /** Whether the track is a stream */
   public isStream: boolean;
   /** Track's author */
-  public author: string | undefined;
+  public author: string;
   /** Track's length */
-  public length: number | undefined;
+  public length: number;
   /** Track's position (I don't know this) */
-  public position: number | undefined;
+  public position: number;
   /** Track's thumbnail, if available */
   public thumbnail: string | undefined;
+  /** artworkUrl */
+  public artworkUrl: string | undefined;
   /** The YouTube/soundcloud URI for spotify and other unsupported source */
   public realUri: string | null;
-
+  /** Plugin Information (I don't know this) */
+  public pluginInfo: unknown;
+  /** International Standard Recording Code */
+  public isrc: string | undefined;
   public resolvedBySource: boolean = false;
 
   constructor(raw: RawTrack, requester: unknown) {
     this.kazagumo = undefined;
 
-    this.track = raw.track;
+    this.encoded = raw.encoded;
     this.sourceName = raw.info.sourceName;
     this.title = raw.info.title;
     this.uri = raw.info.uri;
@@ -61,9 +67,12 @@ export class KazagumoTrack {
     this.isStream = raw.info.isStream;
     this.author = raw.info.author;
     this.length = raw.info.length;
+    this.position = raw.info.position;
+    this.artworkUrl = raw.info.artworkUrl;
+    this.isrc = raw.info.isrc;
     this.thumbnail = raw.info.thumbnail;
-    this.realUri = SupportedSources.includes(this.sourceName) ? this.uri : null;
-
+    this.realUri = SupportedSources.includes(this.sourceName) && this.uri ? this.uri : null;
+    this.pluginInfo = raw.pluginInfo;
     this.requester = requester;
 
     if (this.sourceName === 'youtube' && this.identifier)
@@ -76,19 +85,22 @@ export class KazagumoTrack {
    */
   public getRaw(): RawTrack {
     return {
-      track: this.track,
+      encoded: this.encoded,
       info: {
+        identifier: this.identifier,
+        isSeekable: this.isSeekable,
+        author: this.author,
+        length: this.length,
+        isStream: this.isStream,
+        position: this.position,
         title: this.title,
         uri: this.uri,
-        identifier: this.identifier,
-        author: this.author,
-        sourceName: this.sourceName,
-        isSeekable: this.isSeekable,
-        isStream: this.isStream,
-        length: this.length,
-        position: this.position,
+        isrc: this.isrc,
         thumbnail: this.thumbnail,
+        artworkUrl: this.artworkUrl,
+        sourceName: this.sourceName,
       },
+      pluginInfo: this.pluginInfo,
     };
   }
 
@@ -100,7 +112,7 @@ export class KazagumoTrack {
   setKazagumo(kazagumo: Kazagumo): KazagumoTrack {
     this.kazagumo = kazagumo;
     if (this.sourceName === 'youtube' && this.identifier)
-      this.thumbnail = `https://img.youtube.com/vi/${this.identifier}/${
+      this.artworkUrl = `https://img.youtube.com/vi/${this.identifier}/${
         kazagumo.KazagumoOptions.defaultYoutubeThumbnail ?? 'hqdefault'
       }.jpg`;
 
@@ -113,7 +125,7 @@ export class KazagumoTrack {
   get readyToPlay(): boolean {
     return (
       this.kazagumo !== undefined &&
-      !!this.track &&
+      !!this.encoded &&
       !!this.sourceName &&
       !!this.identifier &&
       !!this.author &&
@@ -129,7 +141,7 @@ export class KazagumoTrack {
    * @param options Resolve options
    * @returns Promise<KazagumoTrack>
    */
-  public async resolve(options?: ResolveOptions): Promise<KazagumoTrack> {
+  public async resolve(options: ResolveOptions): Promise<KazagumoTrack> {
     if (!this.kazagumo) throw new KazagumoError(1, 'Kazagumo is not set');
     if (
       this.kazagumo.KazagumoOptions.trackResolver &&
@@ -149,11 +161,11 @@ export class KazagumoTrack {
 
     this.kazagumo.emit(Events.Debug, `Resolving ${this.sourceName} track ${this.title}; Source: ${this.sourceName}`);
 
-    const result = await this.getTrack(options?.player ?? null);
+    const result = await this.getTrack(options.player ?? null);
     if (!result) throw new KazagumoError(2, 'No results found');
 
-    this.track = result.track;
-    this.realUri = result.info.uri;
+    this.encoded = result.encoded;
+    this.realUri = result.info.uri || null;
     this.length = result.info.length;
 
     if (overwrite || resolveSource) {
@@ -168,26 +180,20 @@ export class KazagumoTrack {
     return this;
   }
 
-  private async getTrack(player: KazagumoPlayer | null): Promise<Track> {
+  private async getTrack(player: KazagumoPlayer): Promise<Track> {
     if (!this.kazagumo) throw new Error('Kazagumo is not set');
 
     const defaultSearchEngine = this.kazagumo.KazagumoOptions.defaultSearchEngine;
     const source = (SourceIDs as any)[defaultSearchEngine || 'youtube'] || 'yt';
     const query = [this.author, this.title].filter((x) => !!x).join(' - ');
-    const node = this.kazagumo.getLeastUsedNode();
-
-    if (!node) throw new KazagumoError(1, 'No nodes available');
-
-    const result = player
-      ? await player?.search(`${source}:${query}`)
-      : await node.rest.resolve(`${source}search:${query}`);
+    const result = await player.search(`${source}:${query}`);
     if (!result || !result.tracks.length) throw new KazagumoError(2, 'No results found');
 
-    result.tracks = result.tracks.map((x) => KazagumoUtils.convertKazagumoTrackToTrack(x));
+    const shoukakUTracks = result.tracks.map((track) => KazagumoUtils.convertKazagumoTrackToTrack(track));
 
     if (this.author) {
       const author = [this.author, `${this.author} - Topic`];
-      const officialTrack = result.tracks.find(
+      const officialTrack = shoukakUTracks.find(
         (track) =>
           author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, 'i').test(track.info.author)) ||
           new RegExp(`^${escapeRegExp(this.title)}$`, 'i').test(track.info.title),
@@ -195,7 +201,7 @@ export class KazagumoTrack {
       if (officialTrack) return officialTrack;
     }
     if (this.length) {
-      const sameDuration = result.tracks.find(
+      const sameDuration = shoukakUTracks.find(
         (track) =>
           track.info.length >= (this.length ? this.length : 0) - 2000 &&
           track.info.length <= (this.length ? this.length : 0) + 2000,
@@ -203,6 +209,6 @@ export class KazagumoTrack {
       if (sameDuration) return sameDuration;
     }
 
-    return result.tracks[0];
+    return shoukakUTracks[0];
   }
 }

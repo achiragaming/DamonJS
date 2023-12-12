@@ -7,7 +7,7 @@ export interface KazagumoOptions {
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
   /** Kazagumo plugins */
-  plugins?: KazagumoPlugin[] ;
+  plugins?: KazagumoPlugin[];
   /** Source that will be forced to resolve when playing it */
   sourceForceResolve?: string[];
   /** The track resolver. Make sure you set <KazagumoTrack>.track for it to work. (I'm not responsible for any error during playback if you don't set it right) */
@@ -45,19 +45,14 @@ export const SourceIDs = {
 };
 
 export interface KazagumoPlayerOptions {
-  guildId: Snowflake;
-  voiceId: Snowflake;
-  textId: Snowflake;
-  deaf: boolean;
   volume: number;
-  /** Whether the node for searching track should be the same as the node for playing track. Default: true */
-  searchWithSameNode?: boolean;
+  data?: [string, any][];
 }
 
 export interface ResolveOptions {
   overwrite?: boolean;
   forceResolve?: boolean;
-  player?: KazagumoPlayer;
+  player: KazagumoPlayer;
 }
 
 export interface CreatePlayerOptions {
@@ -65,38 +60,35 @@ export interface CreatePlayerOptions {
   guildId: Snowflake;
   /** The player's voice ID */
   voiceId: Snowflake;
-  /** The player's text ID */
-  textId: Snowflake;
   /** Whether the bot should deafen */
   deaf?: boolean;
   /** Whether the bot should mute */
   mute?: boolean;
   /** The player's guild's shardId */
   shardId?: number;
-  /** Balance the node? */
-  loadBalancer?: boolean;
   /** The player's volume */
   volume?: number;
-  /** Use specific node */
-  nodeName?: string;
   /** The player's data, usable when you extends it */
-  data?: unknown;
+  data?: [string, any][];
 }
 
 export interface RawTrack {
-  track: string;
+  encoded: string;
   info: {
-    title: string;
-    uri: string;
     identifier: string;
-    sourceName: string;
     isSeekable: boolean;
+    author: string;
+    length: number;
     isStream: boolean;
-    author?: string;
-    length?: number;
-    position?: number;
+    position: number;
+    title: string;
+    uri?: string;
+    artworkUrl?: string;
     thumbnail?: string;
+    isrc?: string;
+    sourceName: string;
   };
+  pluginInfo: unknown;
 }
 
 export interface KazagumoEvents {
@@ -151,12 +143,18 @@ export enum LoopState {
 export interface KazagumoSearchOptions {
   requester: unknown;
   engine?: SearchEngines;
-  nodeName?: string;
 }
 
 export interface KazagumoSearchResult {
   type: SearchResultTypes;
-  playlistName?: string;
+  playlistInfo?: {
+    encoded: string;
+    info: {
+      name: string;
+      selectedTrack: number;
+    };
+    pluginInfo: unknown;
+  };
   tracks: KazagumoTrack[];
 }
 
@@ -164,6 +162,8 @@ export enum SearchResultTypes {
   Playlist = 'PLAYLIST',
   Track = 'TRACK',
   Search = 'SEARCH',
+  Empty = 'EMPTY',
+  Error = 'Error',
 }
 
 export const SupportedSources = [
@@ -206,11 +206,11 @@ export enum PlayerState {
 }
 
 export class KazagumoPlugin {
-  public load(kazagumo: Kazagumo ): void {
+  public load(kazagumo: Kazagumo): void {
     throw new KazagumoError(1, 'Plugin must implement load()');
   }
 
-  public unload(kazagumo: Kazagumo ): void {
+  public unload(kazagumo: Kazagumo): void {
     throw new KazagumoError(1, 'Plugin must implement unload()');
   }
 }
