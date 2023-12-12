@@ -34,6 +34,10 @@ export class KazagumoPlayer {
    */
   private options: KazagumoPlayerOptions;
   /**
+   * The text channel ID of the player
+   */
+  public textId?: Snowflake;
+  /**
    * Kazagumo Instance
    */
   private readonly kazagumo: Kazagumo;
@@ -61,6 +65,7 @@ export class KazagumoPlayer {
    * Player's custom data
    */
   public readonly data: Map<string, any>;
+
   /**
    * @param kazagumo Kazagumo instance
    * @param connection Shoukaku's Connection instance
@@ -82,6 +87,7 @@ export class KazagumoPlayer {
   public async init() {
     if (this.state === PlayerState.CONNECTED) throw new KazagumoError(1, 'Player is already initialized or initiazing');
     await this.setGlobalVolume(this.options.volume);
+    this.setTextChannel(this.options.textId);
     this.shoukaku.on('start', () => {
       if (!this.queue.current) return;
       this.emit(Events.PlayerStart, this, this.queue.current);
@@ -380,6 +386,19 @@ export class KazagumoPlayer {
 
     this.state = PlayerState.CONNECTED;
     this.emit(Events.Debug, `Player ${this.guildId} moved to voice channel ${voiceId}`);
+
+    return this;
+  }
+
+  /**
+   * Set text channel
+   * @param textId Text channel ID
+   * @returns KazagumoPlayer
+   */
+  public setTextChannel(textId: Snowflake): KazagumoPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+
+    this.textId = textId;
 
     return this;
   }

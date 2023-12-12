@@ -104,6 +104,7 @@ export class Kazagumo extends EventEmitter {
       shoukakuConnection,
       {
         data: options.data,
+        textId: options.textId,
         volume: isNaN(Number(options.volume)) ? 100 : (options.volume as number),
       },
     );

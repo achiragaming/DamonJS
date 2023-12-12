@@ -45,6 +45,8 @@ export const SourceIDs = {
 };
 
 export interface KazagumoPlayerOptions {
+  /** The player's text ID */
+  textId: Snowflake;
   volume: number;
   data?: [string, any][];
 }
@@ -60,6 +62,8 @@ export interface CreatePlayerOptions {
   guildId: Snowflake;
   /** The player's voice ID */
   voiceId: Snowflake;
+  /** The player's text ID */
+  textId: Snowflake;
   /** Whether the bot should deafen */
   deaf?: boolean;
   /** Whether the bot should mute */
