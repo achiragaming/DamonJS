@@ -252,9 +252,9 @@ export class KazagumoPlayer {
     const current = this.queue.current;
     current.setKazagumo(this.kazagumo);
 
-    const resolveResult = await current.resolve({ player: this }).catch((e: KazagumoError) => e);
+    const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
 
-    if (resolveResult instanceof KazagumoError) {
+    if (resolveResult instanceof Error) {
       this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
       this.emit(Events.Debug, `Player ${this.guildId} resolve error: ${resolveResult.message} skipping`);
       return this.skip();

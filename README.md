@@ -72,6 +72,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > - 1.2.6 - removed thumbnail use artworkUrl instead.
 > - 1.2.7 - requester is now mandotary.
 > - 1.2.8 - fixed playing gives false information.
+> - 1.2.9 - fixed not catching some errors on play.
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
 > Kazagumo Better support server: https://discord.gg/noerror  
