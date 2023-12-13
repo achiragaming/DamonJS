@@ -44,8 +44,6 @@ export class KazagumoTrack {
   /** Track's position (I don't know this) */
   public position: number;
   /** Track's thumbnail, if available */
-  public thumbnail: string | undefined;
-  /** artworkUrl */
   public artworkUrl: string | undefined;
   /** The YouTube/soundcloud URI for spotify and other unsupported source */
   public realUri: string | null;
@@ -70,13 +68,9 @@ export class KazagumoTrack {
     this.position = raw.info.position;
     this.artworkUrl = raw.info.artworkUrl;
     this.isrc = raw.info.isrc;
-    this.thumbnail = raw.info.thumbnail;
     this.realUri = SupportedSources.includes(this.sourceName) && this.uri ? this.uri : null;
     this.pluginInfo = raw.pluginInfo;
     this.requester = requester;
-
-    if (this.sourceName === 'youtube' && this.identifier)
-      this.thumbnail = `https://img.youtube.com/vi/${this.identifier}/hqdefault.jpg`;
   }
 
   /**
@@ -96,7 +90,6 @@ export class KazagumoTrack {
         title: this.title,
         uri: this.uri,
         isrc: this.isrc,
-        thumbnail: this.thumbnail,
         artworkUrl: this.artworkUrl,
         sourceName: this.sourceName,
       },
