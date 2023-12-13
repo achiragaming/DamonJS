@@ -155,7 +155,7 @@ export class KazagumoPlayer {
    * Get Playing Status
    */
   public get playing(): boolean {
-    return !this.shoukaku.paused;
+    return this.shoukaku.track && !this.shoukaku.paused ? true : false;
   }
   /**
    * Get Paused Status
