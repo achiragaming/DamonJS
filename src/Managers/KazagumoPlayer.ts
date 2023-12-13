@@ -108,7 +108,7 @@ export class KazagumoPlayer {
   public async init() {
     if (this.state === PlayerState.CONNECTED) throw new KazagumoError(1, 'Player is already initialized or initiazing');
     await this.setGlobalVolume(this.options.volume);
-    this.player.on('start', () => {
+    this.player.on('start', (data) => {
       if (!this.queue.current) return;
       this.emit(Events.PlayerStart, this, this.queue.current);
     });
@@ -175,7 +175,7 @@ export class KazagumoPlayer {
    * Get Playing Status
    */
   public get playing(): boolean {
-    return this.player.track && !this.player.paused ? true : false;
+    return this.queue.current && !this.player.paused ? true : false;
   }
   /**
    * Get Paused Status
