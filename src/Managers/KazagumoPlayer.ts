@@ -422,6 +422,7 @@ export class KazagumoPlayer {
 
     this.state = PlayerState.DESTROYING;
     await this.shoukaku.destroyPlayer();
+    this.connection.disconnect();
     this.shoukaku.removeAllListeners();
     this.kazagumo.players.delete(this.guildId);
     this.state = PlayerState.DESTROYED;
