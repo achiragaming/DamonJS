@@ -47,6 +47,10 @@ export class KazagumoPlayer {
    */
   public player: Player;
   /**
+   * Shoukaku's Player instance
+   */
+  private isTrackPlaying: boolean;
+  /**
    * Shoukaku's Main Instance
    */
   public shoukaku: Shoukaku;
@@ -100,6 +104,7 @@ export class KazagumoPlayer {
     this.data = new Map(options.data);
     this.textId = this.options.textId;
     this.search = this.kazagumo.search.bind(this.kazagumo, this);
+    this.isTrackPlaying = false;
   }
 
   /**
@@ -108,8 +113,9 @@ export class KazagumoPlayer {
   public async init() {
     if (this.state === PlayerState.CONNECTED) throw new KazagumoError(1, 'Player is already initialized or initiazing');
     await this.setGlobalVolume(this.options.volume);
-    this.player.on('start', (data) => {
+    this.player.on('start', () => {
       if (!this.queue.current) return;
+      this.isTrackPlaying = true;
       this.emit(Events.PlayerStart, this, this.queue.current);
     });
 
@@ -117,6 +123,8 @@ export class KazagumoPlayer {
       // This event emits STOPPED reason when destroying, so return to prevent double emit
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
         return this.emit(Events.Debug, `Player ${this.guildId} destroyed from end event`);
+
+      this.isTrackPlaying = false;
 
       if (data.reason === 'replaced') return this.emit(Events.PlayerEnd, this);
 
@@ -138,16 +146,25 @@ export class KazagumoPlayer {
       return this.play();
     });
 
-    this.player.on('closed', (data: WebSocketClosedEvent) => this.emit(Events.PlayerClosed, this, data));
+    this.player.on('closed', (data: WebSocketClosedEvent) => {
+      this.isTrackPlaying = false;
+      this.emit(Events.PlayerClosed, this, data);
+    });
 
-    this.player.on('exception', (data: TrackExceptionEvent) => this.emit(Events.PlayerException, this, data));
+    this.player.on('exception', (data: TrackExceptionEvent) => {
+      this.isTrackPlaying = false;
+      this.emit(Events.PlayerException, this, data);
+    });
 
     this.player.on('update', (data: PlayerUpdate) => {
       if (!this.queue.current) return;
       this.queue.current.position = data.state.position || 0;
       this.emit(Events.PlayerUpdate, this, data);
     });
-    this.player.on('stuck', (data: TrackStuckEvent) => this.emit(Events.PlayerStuck, this, data));
+    this.player.on('stuck', (data: TrackStuckEvent) => {
+      this.isTrackPlaying = false;
+      this.emit(Events.PlayerStuck, this, data);
+    });
     this.player.on('resumed', () => this.emit(Events.PlayerResumed, this));
 
     this.state = PlayerState.CONNECTED;
@@ -175,7 +192,7 @@ export class KazagumoPlayer {
    * Get Playing Status
    */
   public get playing(): boolean {
-    return this.queue.current && !this.player.paused ? true : false;
+    return this.isTrackPlaying && !this.player.paused ? true : false;
   }
   /**
    * Get Paused Status
