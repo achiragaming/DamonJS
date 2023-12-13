@@ -21,7 +21,7 @@ export class KazagumoTrack {
   /**
    * Track Requester
    */
-  public requester: unknown | undefined;
+  public requester: unknown;
 
   /** Track's Base64 */
   public encoded: string;
@@ -179,7 +179,7 @@ export class KazagumoTrack {
     const defaultSearchEngine = this.kazagumo.KazagumoOptions.defaultSearchEngine;
     const source = (SourceIDs as any)[defaultSearchEngine || 'youtube'] || 'yt';
     const query = [this.author, this.title].filter((x) => !!x).join(' - ');
-    const result = await player.search(`${source}:${query}`);
+    const result = await player.search(`${query}`, { requester: this.requester, engine: source });
     if (!result || !result.tracks.length) throw new KazagumoError(2, 'No results found');
 
     const shoukakUTracks = result.tracks.map((track) => KazagumoUtils.convertKazagumoTrackToTrack(track));

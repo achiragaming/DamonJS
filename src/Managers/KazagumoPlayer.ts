@@ -437,7 +437,7 @@ export class KazagumoPlayer {
    * @param options KazagumoOptions
    * @returns Promise<KazagumoSearchResult>
    */
-  public async search(query: string, options?: KazagumoSearchOptions): Promise<KazagumoSearchResult> {
+  public async search(query: string, options: KazagumoSearchOptions): Promise<KazagumoSearchResult> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
 
     const source = (SourceIDs as any)[
@@ -456,17 +456,17 @@ export class KazagumoPlayer {
     const result = await this.node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
 
     if (result?.loadType === LoadType.TRACK) {
-      return this.buildSearch(undefined, [new KazagumoTrack(result.data, options?.requester)], SearchResultTypes.Track);
+      return this.buildSearch(undefined, [new KazagumoTrack(result.data, options.requester)], SearchResultTypes.Track);
     } else if (result?.loadType === LoadType.PLAYLIST) {
       return this.buildSearch(
         result.data,
-        result.data.tracks.map((track) => new KazagumoTrack(track, options?.requester)),
+        result.data.tracks.map((track) => new KazagumoTrack(track, options.requester)),
         SearchResultTypes.Playlist,
       );
     } else if (result?.loadType === LoadType.SEARCH) {
       return this.buildSearch(
         undefined,
-        result.data.map((track) => new KazagumoTrack(track, options?.requester)),
+        result.data.map((track) => new KazagumoTrack(track, options.requester)),
         SearchResultTypes.Search,
       );
     } else if (result?.loadType === LoadType.EMPTY) {

@@ -70,6 +70,7 @@ To explore and enhance the functionality of Kazagumo Better, feel free to levera
 > - 1.2.4 - Added textId option Back.
 > - 1.2.5 - Small bug fixes.
 > - 1.2.6 - removed thumbnail use artworkUrl instead.
+> - 1.2.7 - requester is now mandotary.
 ## Support
 ⚠️ We strongly recommend reading through the documentation thoroughly before seeking assistance ⚠️ 
 > Kazagumo Better support server: https://discord.gg/noerror  
