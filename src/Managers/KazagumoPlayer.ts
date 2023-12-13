@@ -37,7 +37,7 @@ export class KazagumoPlayer {
   /**
    * The text channel ID of the player
    */
-  public textId?: Snowflake;
+  public textId: Snowflake;
   /**
    * Kazagumo Instance
    */
@@ -70,6 +70,13 @@ export class KazagumoPlayer {
    * Player's custom data
    */
   public readonly data: Map<string, any>;
+  /**
+   * Search a track by query or uri
+   * @param query Query
+   * @param options KazagumoOptions
+   * @returns Promise<KazagumoSearchResult>
+   */
+  search: (query: string, options: KazagumoSearchOptions) => Promise<KazagumoSearchResult>;
 
   /**
    * @param kazagumo Kazagumo instance
@@ -91,6 +98,8 @@ export class KazagumoPlayer {
     this.shoukaku = shoukaku;
     this.queue = new KazagumoQueue();
     this.data = new Map(options.data);
+    this.textId = this.options.textId;
+    this.search = this.kazagumo.search.bind(this.kazagumo, this);
   }
 
   /**
@@ -99,7 +108,6 @@ export class KazagumoPlayer {
   public async init() {
     if (this.state === PlayerState.CONNECTED) throw new KazagumoError(1, 'Player is already initialized or initiazing');
     await this.setGlobalVolume(this.options.volume);
-    this.setTextChannel(this.options.textId);
     this.player.on('start', () => {
       if (!this.queue.current) return;
       this.emit(Events.PlayerStart, this, this.queue.current);
@@ -207,7 +215,7 @@ export class KazagumoPlayer {
     return this.player.filters;
   }
 
-  private get node(): Node {
+  public get node(): Node {
     return this.player.node;
   }
 
@@ -440,70 +448,6 @@ export class KazagumoPlayer {
     this.emit(Events.Debug, `Player destroyed; Guild id: ${this.guildId}`);
 
     return this;
-  }
-
-  /**
-   * Search a track by query or uri.
-   * @param query Query
-   * @param options KazagumoOptions
-   * @returns Promise<KazagumoSearchResult>
-   */
-  public async search(query: string, options: KazagumoSearchOptions): Promise<KazagumoSearchResult> {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-
-    const source = (SourceIDs as any)[
-      (options?.engine && ['youtube', 'youtube_music', 'soundcloud'].includes(options.engine)
-        ? options.engine
-        : null) ||
-        (!!this.kazagumo.KazagumoOptions.defaultSearchEngine &&
-        ['youtube', 'youtube_music', 'soundcloud'].includes(this.kazagumo.KazagumoOptions.defaultSearchEngine!)
-          ? this.kazagumo.KazagumoOptions.defaultSearchEngine
-          : null) ||
-        'youtube'
-    ];
-
-    const isUrl = /^https?:\/\/.*/.test(query);
-
-    const result = await this.node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
-
-    if (result?.loadType === LoadType.TRACK) {
-      return this.buildSearch(undefined, [new KazagumoTrack(result.data, options.requester)], SearchResultTypes.Track);
-    } else if (result?.loadType === LoadType.PLAYLIST) {
-      return this.buildSearch(
-        result.data,
-        result.data.tracks.map((track) => new KazagumoTrack(track, options.requester)),
-        SearchResultTypes.Playlist,
-      );
-    } else if (result?.loadType === LoadType.SEARCH) {
-      return this.buildSearch(
-        undefined,
-        result.data.map((track) => new KazagumoTrack(track, options.requester)),
-        SearchResultTypes.Search,
-      );
-    } else if (result?.loadType === LoadType.EMPTY) {
-      return this.buildSearch(undefined, [], SearchResultTypes.Empty);
-    } else {
-      return this.buildSearch(undefined, undefined, SearchResultTypes.Empty);
-    }
-  }
-
-  private buildSearch(
-    playlistInfo?: {
-      encoded: string;
-      info: {
-        name: string;
-        selectedTrack: number;
-      };
-      pluginInfo: unknown;
-    },
-    tracks: KazagumoTrack[] = [],
-    type?: SearchResultTypes,
-  ): KazagumoSearchResult {
-    return {
-      playlistInfo,
-      tracks,
-      type: type ?? SearchResultTypes.Search,
-    };
   }
 
   private emit<K extends keyof KazagumoEvents>(event: K, ...args: KazagumoEvents[K]): void {

@@ -12,6 +12,7 @@ import {
   SearchResultTypes,
   SourceIDs,
   State,
+  PlayerState,
 } from './Modules/Interfaces';
 import {
   Node,
@@ -23,6 +24,7 @@ import {
   TrackStuckEvent,
   WebSocketClosedEvent,
   Connector,
+  LoadType,
 } from 'shoukaku';
 
 import { KazagumoPlayer } from './Managers/KazagumoPlayer';
@@ -133,5 +135,74 @@ export class Kazagumo extends EventEmitter {
     const player = this.getPlayer<T>(guildId);
     if (!player) return;
     player.destroy();
+  }
+
+  /**
+   * Search a track by query or uri.
+   * @param player Kazagumo Player
+   * @param query Query
+   * @param options KazagumoOptions
+   * @returns Promise<KazagumoSearchResult>
+   */
+  public async search(
+    player: KazagumoPlayer,
+    query: string,
+    options: KazagumoSearchOptions,
+  ): Promise<KazagumoSearchResult> {
+    if (player.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+
+    const source = (SourceIDs as any)[
+      (options?.engine && ['youtube', 'youtube_music', 'soundcloud'].includes(options.engine)
+        ? options.engine
+        : null) ||
+        (!!this.KazagumoOptions.defaultSearchEngine &&
+        ['youtube', 'youtube_music', 'soundcloud'].includes(this.KazagumoOptions.defaultSearchEngine!)
+          ? this.KazagumoOptions.defaultSearchEngine
+          : null) ||
+        'youtube'
+    ];
+
+    const isUrl = /^https?:\/\/.*/.test(query);
+
+    const result = await player.node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
+
+    if (result?.loadType === LoadType.TRACK) {
+      return this.buildSearch(undefined, [new KazagumoTrack(result.data, options.requester)], SearchResultTypes.Track);
+    } else if (result?.loadType === LoadType.PLAYLIST) {
+      return this.buildSearch(
+        result.data,
+        result.data.tracks.map((track) => new KazagumoTrack(track, options.requester)),
+        SearchResultTypes.Playlist,
+      );
+    } else if (result?.loadType === LoadType.SEARCH) {
+      return this.buildSearch(
+        undefined,
+        result.data.map((track) => new KazagumoTrack(track, options.requester)),
+        SearchResultTypes.Search,
+      );
+    } else if (result?.loadType === LoadType.EMPTY) {
+      return this.buildSearch(undefined, [], SearchResultTypes.Empty);
+    } else {
+      return this.buildSearch(undefined, undefined, SearchResultTypes.Empty);
+    }
+  }
+
+  public buildSearch(
+    playlistInfo?: {
+      encoded: string;
+      info: {
+        name: string;
+        selectedTrack: number;
+      };
+      pluginInfo: unknown;
+    },
+    tracks: KazagumoTrack[] = [],
+    type?: SearchResultTypes,
+  ): KazagumoSearchResult {
+    return {
+      playlistInfo,
+      tracks,
+      type: type ?? SearchResultTypes.Search,
+    };
   }
 }
