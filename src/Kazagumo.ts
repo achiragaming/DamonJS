@@ -183,7 +183,7 @@ export class Kazagumo extends EventEmitter {
     } else if (result?.loadType === LoadType.EMPTY) {
       return this.buildSearch(undefined, [], SearchResultTypes.Empty);
     } else {
-      return this.buildSearch(undefined, undefined, SearchResultTypes.Empty);
+      return this.buildSearch(undefined, undefined, SearchResultTypes.Error);
     }
   }
 
