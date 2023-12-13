@@ -100,6 +100,7 @@ export class Kazagumo extends EventEmitter {
     if (!shoukakuConnection) throw new KazagumoError(1, 'Cannot find the shoukaku connection');
     const kazagumoPlayer = new (this.KazagumoOptions.extends?.player ?? KazagumoPlayer)(
       this,
+      this.shoukaku,
       shoukakuPlayer,
       shoukakuConnection,
       {

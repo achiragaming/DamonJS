@@ -11,6 +11,7 @@ import {
   TrackStuckEvent,
   LoadType,
   Connection,
+  Shoukaku,
 } from 'shoukaku';
 import {
   KazagumoError,
@@ -44,7 +45,11 @@ export class KazagumoPlayer {
   /**
    * Shoukaku's Player instance
    */
-  public shoukaku: Player;
+  public player: Player;
+  /**
+   * Shoukaku's Main Instance
+   */
+  public shoukaku: Shoukaku;
   /**
    * Shoukaku's Connection instance
    */
@@ -72,11 +77,18 @@ export class KazagumoPlayer {
    * @param player Shoukaku's Player instance
    * @param options Kazagumo options
    */
-  constructor(kazagumo: Kazagumo, player: Player, connection: Connection, options: KazagumoPlayerOptions) {
+  constructor(
+    kazagumo: Kazagumo,
+    shoukaku: Shoukaku,
+    player: Player,
+    connection: Connection,
+    options: KazagumoPlayerOptions,
+  ) {
     this.options = options;
     this.kazagumo = kazagumo;
-    this.shoukaku = player;
+    this.player = player;
     this.connection = connection;
+    this.shoukaku = shoukaku;
     this.queue = new KazagumoQueue();
     this.data = new Map(options.data);
   }
@@ -88,12 +100,12 @@ export class KazagumoPlayer {
     if (this.state === PlayerState.CONNECTED) throw new KazagumoError(1, 'Player is already initialized or initiazing');
     await this.setGlobalVolume(this.options.volume);
     this.setTextChannel(this.options.textId);
-    this.shoukaku.on('start', () => {
+    this.player.on('start', () => {
       if (!this.queue.current) return;
       this.emit(Events.PlayerStart, this, this.queue.current);
     });
 
-    this.shoukaku.on('end', (data) => {
+    this.player.on('end', (data) => {
       // This event emits STOPPED reason when destroying, so return to prevent double emit
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
         return this.emit(Events.Debug, `Player ${this.guildId} destroyed from end event`);
@@ -118,17 +130,17 @@ export class KazagumoPlayer {
       return this.play();
     });
 
-    this.shoukaku.on('closed', (data: WebSocketClosedEvent) => this.emit(Events.PlayerClosed, this, data));
+    this.player.on('closed', (data: WebSocketClosedEvent) => this.emit(Events.PlayerClosed, this, data));
 
-    this.shoukaku.on('exception', (data: TrackExceptionEvent) => this.emit(Events.PlayerException, this, data));
+    this.player.on('exception', (data: TrackExceptionEvent) => this.emit(Events.PlayerException, this, data));
 
-    this.shoukaku.on('update', (data: PlayerUpdate) => {
+    this.player.on('update', (data: PlayerUpdate) => {
       if (!this.queue.current) return;
       this.queue.current.position = data.state.position || 0;
       this.emit(Events.PlayerUpdate, this, data);
     });
-    this.shoukaku.on('stuck', (data: TrackStuckEvent) => this.emit(Events.PlayerStuck, this, data));
-    this.shoukaku.on('resumed', () => this.emit(Events.PlayerResumed, this));
+    this.player.on('stuck', (data: TrackStuckEvent) => this.emit(Events.PlayerStuck, this, data));
+    this.player.on('resumed', () => this.emit(Events.PlayerResumed, this));
 
     this.state = PlayerState.CONNECTED;
   }
@@ -155,13 +167,13 @@ export class KazagumoPlayer {
    * Get Playing Status
    */
   public get playing(): boolean {
-    return this.shoukaku.track && !this.shoukaku.paused ? true : false;
+    return this.player.track && !this.player.paused ? true : false;
   }
   /**
    * Get Paused Status
    */
   public get paused(): boolean {
-    return this.shoukaku.paused;
+    return this.player.paused;
   }
   /**
    * Get Mute Status
@@ -173,30 +185,30 @@ export class KazagumoPlayer {
    * Get volume
    */
   public get volume(): number {
-    return this.shoukaku.volume;
+    return this.player.volume;
   }
   /**
    * Get Filter volume
    */
   public get filterVolume(): number | undefined {
-    return this.shoukaku.filters.volume;
+    return this.player.filters.volume;
   }
   /**
    * Get player position
    */
   public get position(): number {
-    return this.shoukaku.position;
+    return this.player.position;
   }
 
   /**
    * Get filters
    */
   public get filters(): FilterOptions {
-    return this.shoukaku.filters;
+    return this.player.filters;
   }
 
   private get node(): Node {
-    return this.shoukaku.node;
+    return this.player.node;
   }
 
   /**
@@ -207,7 +219,7 @@ export class KazagumoPlayer {
   public async pause(pause: boolean): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     if (this.paused === pause || !this.queue.totalSize) return this;
-    await this.shoukaku.setPaused(pause);
+    await this.player.setPaused(pause);
 
     return this;
   }
@@ -264,7 +276,7 @@ export class KazagumoPlayer {
     if (options) playOptions.options = { ...options, noReplace: false };
     else playOptions.options = { noReplace: false };
 
-    await this.shoukaku.playTrack(playOptions);
+    await this.player.playTrack(playOptions);
 
     return this;
   }
@@ -304,7 +316,7 @@ export class KazagumoPlayer {
     let realTrackId = trackId - 1;
     if (this.loop === LoopState.Track) realTrackId = this.queue.currentId - 1;
     this.queue.currentId = realTrackId;
-    await this.shoukaku.stopTrack();
+    await this.player.stopTrack();
     return this;
   }
 
@@ -324,7 +336,7 @@ export class KazagumoPlayer {
     if (position < 0 || position > (this.queue.current.length ?? 0))
       position = Math.max(Math.min(position, this.queue.current.length ?? 0), 0);
 
-    await this.shoukaku.seekTo(position);
+    await this.player.seekTo(position);
     return this;
   }
 
@@ -336,7 +348,7 @@ export class KazagumoPlayer {
   public async setGlobalVolume(volume: number): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     if (isNaN(volume)) throw new KazagumoError(1, 'volume must be a number');
-    await this.shoukaku.setGlobalVolume(volume);
+    await this.player.setGlobalVolume(volume);
     return this;
   }
 
@@ -348,7 +360,7 @@ export class KazagumoPlayer {
   public async setFilterVolume(volume: number): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     if (isNaN(volume)) throw new KazagumoError(1, 'volume must be a number');
-    await this.shoukaku.setFilterVolume(volume / 100);
+    await this.player.setFilterVolume(volume / 100);
     return this;
   }
 
@@ -421,9 +433,7 @@ export class KazagumoPlayer {
       throw new KazagumoError(1, 'Player is already destroyed');
 
     this.state = PlayerState.DESTROYING;
-    await this.shoukaku.destroyPlayer();
-    this.connection.disconnect();
-    this.shoukaku.removeAllListeners();
+    await this.shoukaku.leaveVoiceChannel(this.guildId);
     this.kazagumo.players.delete(this.guildId);
     this.state = PlayerState.DESTROYED;
     this.emit(Events.PlayerDestroy, this);
