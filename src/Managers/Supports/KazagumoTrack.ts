@@ -181,7 +181,7 @@ export class KazagumoTrack {
   }
 
   private async getTrack(player: KazagumoPlayer): Promise<Track> {
-    if (!this.kazagumo) throw new Error('Kazagumo is not set');
+    if (!this.kazagumo) throw new KazagumoError(1, 'Kazagumo is not set');
 
     const defaultSearchEngine = this.kazagumo.KazagumoOptions.defaultSearchEngine;
     const source = (SourceIDs as any)[defaultSearchEngine || 'youtube'] || 'yt';

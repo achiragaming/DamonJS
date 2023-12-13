@@ -206,8 +206,6 @@ export class KazagumoPlayer {
    */
   public async pause(pause: boolean): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    if (typeof pause !== 'boolean') throw new KazagumoError(1, 'pause must be a boolean');
-
     if (this.paused === pause || !this.queue.totalSize) return this;
     await this.shoukaku.setPaused(pause);
 
@@ -228,12 +226,8 @@ export class KazagumoPlayer {
       return this;
     }
 
-    if (loop === LoopState.None || loop === LoopState.Queue || loop === LoopState.Track) {
-      this.loop = loop;
-      return this;
-    }
-
-    throw new KazagumoError(1, `loop must be one of 'none', 'queue', 'track'`);
+    this.loop = loop;
+    return this;
   }
 
   /**
@@ -245,30 +239,24 @@ export class KazagumoPlayer {
   public async play(track?: KazagumoTrack, options?: PlayOptions): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
 
-    if (track && !(track instanceof KazagumoTrack)) throw new KazagumoError(1, 'track must be a KazagumoTrack');
-
     if (!track && !this.queue.totalSize) throw new KazagumoError(1, 'No track is available to play');
 
-    if (!options || typeof options.replaceCurrent !== 'boolean') options = { ...options, replaceCurrent: false };
+    if (!options) options = { replaceCurrent: false };
 
     if (track) {
       this.queue.splice(this.queue.currentId, options.replaceCurrent && this.queue.current ? 1 : 0, track);
     }
+
     if (!this.queue.current) throw new KazagumoError(1, 'No track is available to play');
 
     const current = this.queue.current;
     current.setKazagumo(this.kazagumo);
 
-    let errorMessage: string | undefined;
+    const resolveResult = await current.resolve({ player: this }).catch((e: KazagumoError) => e);
 
-    const resolveResult = await current.resolve({ player: this }).catch((e) => {
-      errorMessage = e.message;
-      return null;
-    });
-
-    if (!resolveResult) {
-      this.emit(Events.PlayerResolveError, this, current, errorMessage);
-      this.emit(Events.Debug, `Player ${this.guildId} resolve error: ${errorMessage} skipping`);
+    if (resolveResult instanceof KazagumoError) {
+      this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
+      this.emit(Events.Debug, `Player ${this.guildId} resolve error: ${resolveResult.message} skipping`);
       return this.skip();
     }
 
@@ -289,7 +277,7 @@ export class KazagumoPlayer {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     let trackId = this.queue.currentId + 1;
     if (!this.queue[trackId]) trackId = 0;
-    if (!this.queue[trackId]) throw new Error(`No songs available for skip.`);
+    if (!this.queue[trackId]) throw new KazagumoError(2, `No songs available for skip.`);
     return this.skipto(trackId);
   }
 
@@ -301,7 +289,7 @@ export class KazagumoPlayer {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
     let trackId = this.queue.currentId - 1;
     if (!this.queue[trackId]) trackId = this.queue.length - 1;
-    if (!this.queue[trackId]) throw new Error(`No songs available for previous.`);
+    if (!this.queue[trackId]) throw new KazagumoError(2, `No songs available for previous.`);
     return this.skipto(trackId);
   }
 
@@ -312,7 +300,7 @@ export class KazagumoPlayer {
    */
   public async skipto(trackId: number): Promise<KazagumoPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    if (!this.queue[trackId]) throw new Error(`${trackId} is an invalid track ID.`);
+    if (!this.queue[trackId]) throw new KazagumoError(2, `${trackId} is an invalid track ID.`);
     let realTrackId = trackId - 1;
     if (this.loop === LoopState.Track) realTrackId = this.queue.currentId - 1;
     this.queue.currentId = realTrackId;

@@ -189,7 +189,6 @@ export interface PlayOptions {
   pause?: boolean;
   startTime?: number;
   endTime?: number;
-
   replaceCurrent?: boolean;
 }
 
