@@ -18,7 +18,7 @@ Experience the power of a modified, enhanced version of [Kazagumo](https://githu
 ## Explore Our Documentation
 Delve into our comprehensive documentation for a seamless experience. Our documentation features a user-friendly search function for quick access.
 > Dive into [Shoukaku](https://github.com/Deivu/Shoukaku) by [Deivu](https://github.com/Deivu) at [Shoukaku Documentation](https://deivu.github.io/Shoukaku)  
-> Explore Kazagumo Better Documentation at [Kazagumo Better Docs](https://noerrorstudio.github.io/kazagumo-better/)
+> Explore Kazagumo Better Documentation at [Kazagumo Better Docs](https://achiragaming.github.io/kazagumo-better/)
 
 ## Easy Installation
 Get started effortlessly with npm installation:
@@ -27,7 +27,7 @@ npm i kazagumo-better
 ```
 
 ## Latest Metadata
-- Version: 1.3.6
+- Version: 1.3.7
 - Pre-release: False  
 - Last Build: 8/12/2023 
 
@@ -40,13 +40,13 @@ Easily set up Lavalink with our step-by-step tutorial with images provided by [W
 
 ## Recent Changes
 Stay updated with our recent enhancements and fixes:
-- Check out our full changelog in the [GitHub repository](https://github.com/NoErrorStudio/kazagumo-better/releases)
+- Check out our full changelog in the [GitHub repository](https://github.com/achiragaming/kazagumo-better/releases)
 
 ## Need Help or Assistance?
 For seamless integration or any queries, explore our support options:
 - Visit the [Kazagumo Better support server](https://discord.gg/noerror)
 - Seek assistance at the [Shoukaku support server](https://discord.gg/FVqbtGu) (#development)
-- Report bugs or issues conveniently on our [GitHub page](https://github.com/NoErrorStudio/kazagumo-better/issues/new/choose)
+- Report bugs or issues conveniently on our [GitHub page](https://github.com/achiragaming/kazagumo-better/issues/new/choose)
 
 ## Meet Our Contributors
 Our dedicated contributors:
