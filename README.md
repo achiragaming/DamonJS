@@ -27,7 +27,7 @@ npm i kazagumo-better
 ```
 
 ## Latest Metadata
-- Version: 1.4.0
+- Version: 1.4.1
 - Pre-release: False  
 - Last Build: 8/15/2023 
 
@@ -42,7 +42,7 @@ Easily set up Lavalink with our step-by-step tutorial with images provided by [W
 Explore practical implementations in our examples folder located at `examples`. These examples showcase various functionalities and usage scenarios to guide you through the integration process.
 
 ### Example 1: [A simple discord music bot made with kazagumo-better](examples/bot.ts)
-Description: Brief description of what this example demonstrates.
+Description: This is a discord bot that written in ts and using kazagumo-better to understand how this package works.
 
 ## Recent Changes
 Stay updated with our recent enhancements and fixes:
