@@ -11,7 +11,7 @@ Experience the power of a modified, enhanced version of [Kazagumo](https://githu
 - ✓ Enhanced queue system for smoother operations
 - ✓ Simplified usage for hassle-free integration
 - ✓ Improved plugin system for extended functionalities
-- ✓ Built on Shoukaku v3 for robust performance
+- ✓ Built on Shoukaku v4 for robust performance
 - ✓ Enhanced stability for uninterrupted enjoyment
 - ✓ 💖 Includes a charming shipgirl for added delight
 
@@ -27,9 +27,9 @@ npm i kazagumo-better
 ```
 
 ## Latest Metadata
-- Version: 1.3.7
+- Version: 1.3.8
 - Pre-release: False  
-- Last Build: 8/12/2023 
+- Last Build: 8/15/2023 
 
 ## Extend with Plugins
 Enhance your experience with our official Spotify plugin:

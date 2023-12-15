@@ -137,7 +137,6 @@ export class KazagumoPlayer {
       }
 
       if (!this.queue.current) {
-        this.queue.clear();
         return this.emit(Events.PlayerEmpty, this);
       } else {
         this.emit(Events.PlayerEnd, this, this.queue.current);
@@ -340,8 +339,13 @@ export class KazagumoPlayer {
     if (!this.queue[trackId]) throw new KazagumoError(2, `${trackId} is an invalid track ID.`);
     let realTrackId = trackId - 1;
     if (this.loop === LoopState.Track) realTrackId = this.queue.currentId - 1;
-    this.queue.currentId = realTrackId;
-    await this.player.stopTrack();
+    if (!this.playing) {
+      this.queue.currentId = realTrackId + 1;
+      await this.play();
+    } else {
+      this.queue.currentId = realTrackId;
+      await this.player.stopTrack();
+    }
     return this;
   }
 
