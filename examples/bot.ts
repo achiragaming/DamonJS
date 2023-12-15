@@ -1,4 +1,4 @@
-import { Events, Kazagumo, Plugins, SearchResultTypes } from '../Index';
+import { Events, Kazagumo, Plugins, SearchResultTypes } from '../src/Index';
 import { Shoukaku, Connectors } from 'shoukaku';
 import { ChannelType, Client, GatewayIntentBits } from 'discord.js';
 

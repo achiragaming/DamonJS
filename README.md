@@ -39,9 +39,9 @@ Enhance your experience with our official Spotify plugin:
 Easily set up Lavalink with our step-by-step tutorial with images provided by [Weeb-Devs](https://github.com/Weeb-Devs/Laffey/blob/main/readme/LAVALINK_INSTALLATION.md). Check the [system requirements](https://github.com/freyacodes/Lavalink#requirements).
 
 ## Example Usage
-Explore practical implementations in our examples folder located at `dist/examples`. These examples showcase various functionalities and usage scenarios to guide you through the integration process.
+Explore practical implementations in our examples folder located at `examples`. These examples showcase various functionalities and usage scenarios to guide you through the integration process.
 
-### Example 1: [A simple discord music bot made with kazagumo-better](dist/examples/bot.ts)
+### Example 1: [A simple discord music bot made with kazagumo-better](examples/bot.ts)
 Description: Brief description of what this example demonstrates.
 
 ## Recent Changes
