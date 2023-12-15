@@ -194,6 +194,12 @@ export class KazagumoPlayer {
     return this.isTrackPlaying && !this.player.paused ? true : false;
   }
   /**
+   * Get if track is ready to play or not
+   */
+  public get playable(): boolean {
+    return this.isTrackPlaying;
+  }
+  /**
    * Get Paused Status
    */
   public get paused(): boolean {
@@ -339,7 +345,7 @@ export class KazagumoPlayer {
     if (!this.queue[trackId]) throw new KazagumoError(2, `${trackId} is an invalid track ID.`);
     let realTrackId = trackId - 1;
     if (this.loop === LoopState.Track) realTrackId = this.queue.currentId - 1;
-    if (!this.playing) {
+    if (!this.playable) {
       this.queue.currentId = realTrackId + 1;
       await this.play();
     } else {

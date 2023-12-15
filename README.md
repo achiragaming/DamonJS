@@ -27,7 +27,7 @@ npm i kazagumo-better
 ```
 
 ## Latest Metadata
-- Version: 1.3.8
+- Version: 1.3.9
 - Pre-release: False  
 - Last Build: 8/15/2023 
 
