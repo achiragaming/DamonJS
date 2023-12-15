@@ -126,7 +126,7 @@ export class KazagumoPlayer {
 
       this.isTrackPlaying = false;
 
-      if (data.reason === 'replaced') return this.emit(Events.PlayerEnd, this);
+      if (data.reason === 'replaced') return this.emit(Events.PlayerEmpty, this);
 
       if (this.loop === LoopState.Track) {
         this.queue.currentId = this.queue.currentId;

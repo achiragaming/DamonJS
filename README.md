@@ -27,7 +27,7 @@ npm i kazagumo-better
 ```
 
 ## Latest Metadata
-- Version: 1.3.9
+- Version: 1.4.0
 - Pre-release: False  
 - Last Build: 8/15/2023 
 
@@ -37,6 +37,12 @@ Enhance your experience with our official Spotify plugin:
 
 ## Lavalink Installation Guide
 Easily set up Lavalink with our step-by-step tutorial with images provided by [Weeb-Devs](https://github.com/Weeb-Devs/Laffey/blob/main/readme/LAVALINK_INSTALLATION.md). Check the [system requirements](https://github.com/freyacodes/Lavalink#requirements).
+
+## Example Usage
+Explore practical implementations in our examples folder located at `dist/examples`. These examples showcase various functionalities and usage scenarios to guide you through the integration process.
+
+### Example 1: [A simple discord music bot made with kazagumo-better](dist/examples/bot.ts)
+Description: Brief description of what this example demonstrates.
 
 ## Recent Changes
 Stay updated with our recent enhancements and fixes:
