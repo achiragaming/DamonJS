@@ -1,13 +1,13 @@
 {
   "name": "damonjs",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "preview": false,
   "description": "A modified Shoukaku wrapper with enhanced queue support.",
   "main": "dist/Index.js",
   "types": "dist/Index.d.ts",
-  "homepage": "https://achiragaming.github.io/damonjs/",
+  "homepage": "https://achiragaming.github.io/DamonJs/",
   "bugs": {
-    "url": "https://achiragaming.github.io/damonjs/issues",
+    "url": "https://achiragaming.github.io/DamonJs/issues",
     "email": "achira8856@gmail.com"
   },
   "engines": {
