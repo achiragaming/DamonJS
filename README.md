@@ -26,9 +26,9 @@ npm i damonjs
 ```
 
 ## Latest Metadata
-- Version: 1.1.2
-- Pre-release: True  
-- Last Build: 8/15/2023 
+- Version: 1.1.3
+- Pre-release: False  
+- Last Build: 8/16/2023 
 
 ## Extend with Plugins
 Enhance your experience with our official Spotify plugin:
