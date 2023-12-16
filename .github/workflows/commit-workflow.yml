@@ -29,7 +29,16 @@ jobs:
           npm run lint
           npm run format
 
-      - run: npm run build
+      - name: Build the package
+        run: npm run build
+
+      - name: Archive project folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: project-folder
+          path: |
+            ./
+            !./node_modules
 
       - id: get_version
         run: |
@@ -50,13 +59,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Copy dist folder to workspace
-        run: cp -r ./dist $GITHUB_WORKSPACE
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: project-folder
 
       - name: Publish to NPM (Dev Version)
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          npm publish --tag=dev $GITHUB_WORKSPACE/dist
+          npm publish --tag=dev
 
   publish-prod:
     needs: build
@@ -67,13 +78,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Copy dist folder to workspace
-        run: cp -r ./dist $GITHUB_WORKSPACE
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: project-folder
 
       - name: Publish to NPM (Prod Version)
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          npm publish $GITHUB_WORKSPACE/dist
+          npm publish
 
   release:
     needs: build
