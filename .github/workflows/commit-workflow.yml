@@ -43,7 +43,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    if: needs.build.outputs.get_preview.preview == 'true'
+    if: needs.build.get_preview.outputs.preview == 'true'
 
     steps:
       - uses: actions/checkout@v3
@@ -57,7 +57,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    if: needs.build.outputs.get_preview.preview != 'true'
+    if: needs.build.get_preview.outputs.preview != 'true'
 
     steps:
       - uses: actions/checkout@v3
@@ -76,12 +76,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ needs.build.outputs.get_version.tag }}
-          release_name: Release v${{ needs.build.outputs.get_version.tag }}
+          tag_name: v${{ needs.build.get_version.outputs.tag }}
+          release_name: Release v${{ needs.build.get_version.outputs.tag }}
           body: |
-            Release v${{ needs.build.outputs.get_version.tag }}
+            Release v${{ needs.build.get_version.outputs.tag }}
           draft: false
-          prerelease: ${{ needs.build.outputs.get_preview.preview == 'true' }}
+          prerelease: ${{ needs.build.get_preview.outputs.preview == 'true' }}
 
       - uses: actions/upload-release-asset@v1
         env:
