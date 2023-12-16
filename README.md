@@ -1,11 +1,11 @@
 # DamonJS
-#### Elevating DamonJs to New Heights 🚀
+#### Elevating Discord Music Bots to New Heights 🚀
 
 ![DamonJS](https://gcdnb.pbrd.co/images/0HWqipcj64ef.jpg?o=1)
 > DamonJS © NoError Studios
 
 ## Welcome to DamonJS!
-Experience the power of a modified, enhanced version of [DamonJs](https://github.com/Takiyo0/DamonJs) with significant improvements and bug fixes.
+Experience the power of a modified, enhanced version of [Kazagumo](https://github.com/Takiyo0/Kazagumo) with significant improvements and bug fixes.
 
 ### Why Choose DamonJS?
 - ✓ Enhanced queue system for smoother operations
@@ -26,7 +26,7 @@ npm i damonjs
 ```
 
 ## Latest Metadata
-- Version: 1.1.6
+- Version: 1.1.7
 - Pre-release: False  
 - Last Build: 8/16/2023 
 
