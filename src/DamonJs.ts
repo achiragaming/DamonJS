@@ -1,12 +1,12 @@
 import { EventEmitter } from 'events';
 import {
   CreatePlayerOptions,
-  KazagumoEvents,
+  DamonJsEvents,
   Events,
-  KazagumoError,
-  KazagumoOptions as KazagumoOptionsOwO,
-  KazagumoSearchOptions,
-  KazagumoSearchResult,
+  DamonJsError,
+  DamonJsOptions as DamonJsOptionsOwO,
+  DamonJsSearchOptions,
+  DamonJsSearchResult,
   PlayerMovedChannels,
   PlayerMovedState,
   SearchResultTypes,
@@ -27,27 +27,27 @@ import {
   LoadType,
 } from 'shoukaku';
 
-import { KazagumoPlayer } from './Managers/KazagumoPlayer';
-import { KazagumoTrack } from './Managers/Supports/KazagumoTrack';
+import { DamonJsPlayer } from './Managers/DamonJsPlayer';
+import { DamonJsTrack } from './Managers/Supports/DamonJsTrack';
 import { Snowflake } from 'discord.js';
 
 // Add other methods related to your base class
 
-export class Kazagumo extends EventEmitter {
+export class DamonJs extends EventEmitter {
   /** Shoukaku instance */
   public shoukaku: Shoukaku;
-  /** Kazagumo players */
-  public readonly players: Map<string, KazagumoPlayer>;
+  /** DamonJs players */
+  public readonly players: Map<string, DamonJsPlayer>;
 
   /**
-   * Initialize a Kazagumo instance.
-   * @param KazagumoOptions KazagumoOptions
+   * Initialize a DamonJs instance.
+   * @param DamonJsOptions DamonJsOptions
    * @param connector Connector
    * @param nodes NodeOption[]
    * @param options ShoukakuOptions
    */
   constructor(
-    public KazagumoOptions: KazagumoOptionsOwO,
+    public DamonJsOptions: DamonJsOptionsOwO,
     connector: Connector,
     nodes: NodeOption[],
     options: ShoukakuOptions = {},
@@ -56,37 +56,37 @@ export class Kazagumo extends EventEmitter {
 
     this.shoukaku = new Shoukaku(connector, nodes, options);
 
-    if (this.KazagumoOptions.plugins) {
-      for (const [, plugin] of this.KazagumoOptions.plugins.entries()) {
-        if (plugin.constructor.name !== 'KazagumoPlugin')
-          throw new KazagumoError(1, 'Plugin must be an instance of KazagumoPlugin');
+    if (this.DamonJsOptions.plugins) {
+      for (const [, plugin] of this.DamonJsOptions.plugins.entries()) {
+        if (plugin.constructor.name !== 'DamonJsPlugin')
+          throw new DamonJsError(1, 'Plugin must be an instance of DamonJsPlugin');
         plugin.load(this);
       }
     }
 
-    this.players = new Map<string, KazagumoPlayer>();
+    this.players = new Map<string, DamonJsPlayer>();
   }
-  public on<K extends keyof KazagumoEvents>(event: K, listener: (...args: KazagumoEvents[K]) => void): this {
+  public on<K extends keyof DamonJsEvents>(event: K, listener: (...args: DamonJsEvents[K]) => void): this {
     super.on(event as string, (...args: any) => listener(...args));
     return this;
   }
-  public once<K extends keyof KazagumoEvents>(event: K, listener: (...args: KazagumoEvents[K]) => void): this {
+  public once<K extends keyof DamonJsEvents>(event: K, listener: (...args: DamonJsEvents[K]) => void): this {
     super.once(event as string, (...args: any) => listener(...args));
     return this;
   }
-  public off<K extends keyof KazagumoEvents>(event: K, listener: (...args: KazagumoEvents[K]) => void): this {
+  public off<K extends keyof DamonJsEvents>(event: K, listener: (...args: DamonJsEvents[K]) => void): this {
     super.off(event as string, (...args: any) => listener(...args));
     return this;
   }
-  public emit<K extends keyof KazagumoEvents>(event: K, ...data: KazagumoEvents[K]): boolean {
+  public emit<K extends keyof DamonJsEvents>(event: K, ...data: DamonJsEvents[K]): boolean {
     return super.emit(event as string, ...data);
   }
   /**
    * Create a player.
    * @param options CreatePlayerOptions
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  public async createPlayer<T extends KazagumoPlayer>(options: CreatePlayerOptions): Promise<T | KazagumoPlayer> {
+  public async createPlayer<T extends DamonJsPlayer>(options: CreatePlayerOptions): Promise<T | DamonJsPlayer> {
     const exist = this.players.get(options.guildId);
     if (exist) return exist;
     if (!options.deaf) options.deaf = false;
@@ -99,8 +99,8 @@ export class Kazagumo extends EventEmitter {
       shardId: options.shardId && !isNaN(options.shardId) ? options.shardId : 0,
     });
     const shoukakuConnection = this.shoukaku.connections.get(options.guildId as string);
-    if (!shoukakuConnection) throw new KazagumoError(1, 'Cannot find the shoukaku connection');
-    const kazagumoPlayer = new (this.KazagumoOptions.extends?.player ?? KazagumoPlayer)(
+    if (!shoukakuConnection) throw new DamonJsError(1, 'Cannot find the shoukaku connection');
+    const kazagumoPlayer = new (this.DamonJsOptions.extends?.player ?? DamonJsPlayer)(
       this,
       this.shoukaku,
       shoukakuPlayer,
@@ -120,9 +120,9 @@ export class Kazagumo extends EventEmitter {
   /**
    * Get a player by guildId.
    * @param guildId Guild ID
-   * @returns KazagumoPlayer | undefined
+   * @returns DamonJsPlayer | undefined
    */
-  public getPlayer<T extends KazagumoPlayer>(guildId: Snowflake): (T | KazagumoPlayer) | undefined {
+  public getPlayer<T extends DamonJsPlayer>(guildId: Snowflake): (T | DamonJsPlayer) | undefined {
     return this.players.get(guildId);
   }
 
@@ -131,7 +131,7 @@ export class Kazagumo extends EventEmitter {
    * @param guildId Guild ID
    * @returns void
    */
-  public destroyPlayer<T extends KazagumoPlayer>(guildId: Snowflake): void {
+  public destroyPlayer<T extends DamonJsPlayer>(guildId: Snowflake): void {
     const player = this.getPlayer<T>(guildId);
     if (!player) return;
     player.destroy();
@@ -139,25 +139,25 @@ export class Kazagumo extends EventEmitter {
 
   /**
    * Search a track by query or uri.
-   * @param player Kazagumo Player
+   * @param player DamonJs Player
    * @param query Query
-   * @param options KazagumoOptions
-   * @returns Promise<KazagumoSearchResult>
+   * @param options DamonJsOptions
+   * @returns Promise<DamonJsSearchResult>
    */
   public async search(
-    player: KazagumoPlayer,
+    player: DamonJsPlayer,
     query: string,
-    options: KazagumoSearchOptions,
-  ): Promise<KazagumoSearchResult> {
-    if (player.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+    options: DamonJsSearchOptions,
+  ): Promise<DamonJsSearchResult> {
+    if (player.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
 
     const source = (SourceIDs as any)[
       (options?.engine && ['youtube', 'youtube_music', 'soundcloud'].includes(options.engine)
         ? options.engine
         : null) ||
-        (!!this.KazagumoOptions.defaultSearchEngine &&
-        ['youtube', 'youtube_music', 'soundcloud'].includes(this.KazagumoOptions.defaultSearchEngine!)
-          ? this.KazagumoOptions.defaultSearchEngine
+        (!!this.DamonJsOptions.defaultSearchEngine &&
+        ['youtube', 'youtube_music', 'soundcloud'].includes(this.DamonJsOptions.defaultSearchEngine!)
+          ? this.DamonJsOptions.defaultSearchEngine
           : null) ||
         'youtube'
     ];
@@ -167,17 +167,17 @@ export class Kazagumo extends EventEmitter {
     const result = await player.node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
 
     if (result?.loadType === LoadType.TRACK) {
-      return this.buildSearch(undefined, [new KazagumoTrack(result.data, options.requester)], SearchResultTypes.Track);
+      return this.buildSearch(undefined, [new DamonJsTrack(result.data, options.requester)], SearchResultTypes.Track);
     } else if (result?.loadType === LoadType.PLAYLIST) {
       return this.buildSearch(
         result.data,
-        result.data.tracks.map((track) => new KazagumoTrack(track, options.requester)),
+        result.data.tracks.map((track) => new DamonJsTrack(track, options.requester)),
         SearchResultTypes.Playlist,
       );
     } else if (result?.loadType === LoadType.SEARCH) {
       return this.buildSearch(
         undefined,
-        result.data.map((track) => new KazagumoTrack(track, options.requester)),
+        result.data.map((track) => new DamonJsTrack(track, options.requester)),
         SearchResultTypes.Search,
       );
     } else if (result?.loadType === LoadType.EMPTY) {
@@ -196,9 +196,9 @@ export class Kazagumo extends EventEmitter {
       };
       pluginInfo: unknown;
     },
-    tracks: KazagumoTrack[] = [],
+    tracks: DamonJsTrack[] = [],
     type?: SearchResultTypes,
-  ): KazagumoSearchResult {
+  ): DamonJsSearchResult {
     return {
       playlistInfo,
       tracks,

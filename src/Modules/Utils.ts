@@ -1,8 +1,8 @@
 import { Track } from 'shoukaku';
-import { KazagumoTrack } from '../Managers/Supports/KazagumoTrack';
+import { DamonJsTrack } from '../Managers/Supports/DamonJsTrack';
 
-export class KazagumoUtils {
-  static convertKazagumoTrackToTrack(track: KazagumoTrack): Track {
+export class DamonJsUtils {
+  static convertDamonJsTrackToTrack(track: DamonJsTrack): Track {
     const { encoded, info, pluginInfo } = track.getRaw();
     return {
       encoded,

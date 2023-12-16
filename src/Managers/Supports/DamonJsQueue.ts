@@ -1,7 +1,7 @@
-import { KazagumoTrack } from './KazagumoTrack';
-import { KazagumoError } from '../../Modules/Interfaces';
+import { DamonJsTrack } from './DamonJsTrack';
+import { DamonJsError } from '../../Modules/Interfaces';
 
-export class KazagumoQueue extends Array<KazagumoTrack> {
+export class DamonJsQueue extends Array<DamonJsTrack> {
   /** Get the size of queue */
   public get size() {
     return this.length;
@@ -29,18 +29,18 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
   public currentId: number = 0;
 
   /** Current playing track */
-  public get current(): KazagumoTrack | undefined {
+  public get current(): DamonJsTrack | undefined {
     return this.at(this.currentId);
   }
   /**
    * Add track(s) to the queue
-   * @param track KazagumoTrack to add
-   * @returns KazagumoQueue
+   * @param track DamonJsTrack to add
+   * @returns DamonJsQueue
    */
-  public add(track: KazagumoTrack | KazagumoTrack[]): KazagumoQueue {
-    if (Array.isArray(track) && track.some((t) => !(t instanceof KazagumoTrack)))
-      throw new KazagumoError(1, 'Track must be an instance of KazagumoTrack');
-    if (!Array.isArray(track) && !(track instanceof KazagumoTrack)) track = [track];
+  public add(track: DamonJsTrack | DamonJsTrack[]): DamonJsQueue {
+    if (Array.isArray(track) && track.some((t) => !(t instanceof DamonJsTrack)))
+      throw new DamonJsError(1, 'Track must be an instance of DamonJsTrack');
+    if (!Array.isArray(track) && !(track instanceof DamonJsTrack)) track = [track];
 
     if (Array.isArray(track)) for (const t of track) this.push(t);
     else this.push(track);
@@ -51,17 +51,17 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
   /**
    * Remove track from the queue
    * @param position Position of the track
-   * @returns KazagumoQueue
+   * @returns DamonJsQueue
    */
-  public remove(position: number): KazagumoQueue {
+  public remove(position: number): DamonJsQueue {
     if (position < 0 || position >= this.length)
-      throw new KazagumoError(1, 'Position must be between 0 and ' + (this.length - 1));
+      throw new DamonJsError(1, 'Position must be between 0 and ' + (this.length - 1));
     this.splice(position, 1);
     return this;
   }
 
   /** Shuffle the queue */
-  public shuffle(): KazagumoQueue {
+  public shuffle(): DamonJsQueue {
     const unplayedSongs = this.slice(this.currentId + 1); // Get unplayed songs after the current song
 
     for (let i = unplayedSongs.length - 1; i > 0; i--) {
@@ -76,7 +76,7 @@ export class KazagumoQueue extends Array<KazagumoTrack> {
     return this;
   }
   /** Clear the queue */
-  public clear(): KazagumoQueue {
+  public clear(): DamonJsQueue {
     this.currentId = 0;
     this.splice(0, this.length);
     return this;

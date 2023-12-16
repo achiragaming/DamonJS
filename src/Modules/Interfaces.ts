@@ -1,22 +1,22 @@
-import { Kazagumo } from '../Kazagumo';
-import { KazagumoPlayer } from '../Index';
-import { KazagumoTrack } from '../Managers/Supports/KazagumoTrack';
+import { DamonJs } from '../DamonJs';
+import { DamonJsPlayer } from '../Index';
+import { DamonJsTrack } from '../Managers/Supports/DamonJsTrack';
 import { PlayerUpdate, TrackExceptionEvent, TrackStuckEvent, Utils, WebSocketClosedEvent } from 'shoukaku';
 import { Snowflake } from 'discord.js';
-export interface KazagumoOptions {
+export interface DamonJsOptions {
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
-  /** Kazagumo plugins */
-  plugins?: KazagumoPlugin[];
+  /** DamonJs plugins */
+  plugins?: DamonJsPlugin[];
   /** Source that will be forced to resolve when playing it */
   sourceForceResolve?: string[];
-  /** The track resolver. Make sure you set <KazagumoTrack>.track for it to work. (I'm not responsible for any error during playback if you don't set it right) */
-  trackResolver?: (this: KazagumoTrack, options?: ResolveOptions) => Promise<boolean>;
+  /** The track resolver. Make sure you set <DamonJsTrack>.track for it to work. (I'm not responsible for any error during playback if you don't set it right) */
+  trackResolver?: (this: DamonJsTrack, options?: ResolveOptions) => Promise<boolean>;
   /** The default youtube thumbnail's size */
   defaultYoutubeThumbnail?: YoutubeThumbnail;
   /** Extend some of the Structures */
   extends?: {
-    player?: Utils.Constructor<KazagumoPlayer>;
+    player?: Utils.Constructor<DamonJsPlayer>;
   };
 }
 
@@ -42,7 +42,7 @@ export const SourceIDs = {
   soundcloud: 'sc',
 };
 
-export interface KazagumoPlayerOptions {
+export interface DamonJsPlayerOptions {
   /** The player's text ID */
   textId: Snowflake;
   volume: number;
@@ -52,7 +52,7 @@ export interface KazagumoPlayerOptions {
 export interface ResolveOptions {
   overwrite?: boolean;
   forceResolve?: boolean;
-  player: KazagumoPlayer;
+  player: DamonJsPlayer;
 }
 
 export interface CreatePlayerOptions {
@@ -93,19 +93,19 @@ export interface RawTrack {
   pluginInfo: unknown;
 }
 
-export interface KazagumoEvents {
-  playerDestroy: [player: KazagumoPlayer];
-  playerCreate: [player: KazagumoPlayer];
-  playerStart: [player: KazagumoPlayer, track: KazagumoTrack];
-  playerEnd: [player: KazagumoPlayer, track?: KazagumoTrack | null];
-  playerEmpty: [player: KazagumoPlayer];
-  playerClosed: [player: KazagumoPlayer, data: WebSocketClosedEvent];
-  playerUpdate: [player: KazagumoPlayer, data: PlayerUpdate];
-  playerException: [player: KazagumoPlayer, data: TrackExceptionEvent];
-  playerResumed: [player: KazagumoPlayer];
-  playerStuck: [player: KazagumoPlayer, data: TrackStuckEvent];
-  playerResolveError: [player: KazagumoPlayer, track: KazagumoTrack, message?: string];
-  playerMoved: [player: KazagumoPlayer, state: PlayerMovedState, channels: PlayerMovedChannels];
+export interface DamonJsEvents {
+  playerDestroy: [player: DamonJsPlayer];
+  playerCreate: [player: DamonJsPlayer];
+  playerStart: [player: DamonJsPlayer, track: DamonJsTrack];
+  playerEnd: [player: DamonJsPlayer, track?: DamonJsTrack | null];
+  playerEmpty: [player: DamonJsPlayer];
+  playerClosed: [player: DamonJsPlayer, data: WebSocketClosedEvent];
+  playerUpdate: [player: DamonJsPlayer, data: PlayerUpdate];
+  playerException: [player: DamonJsPlayer, data: TrackExceptionEvent];
+  playerResumed: [player: DamonJsPlayer];
+  playerStuck: [player: DamonJsPlayer, data: TrackStuckEvent];
+  playerResolveError: [player: DamonJsPlayer, track: DamonJsTrack, message?: string];
+  playerMoved: [player: DamonJsPlayer, state: PlayerMovedState, channels: PlayerMovedChannels];
   debug: [message: string];
 }
 export enum Events {
@@ -142,12 +142,12 @@ export enum LoopState {
   None = 'none',
 }
 
-export interface KazagumoSearchOptions {
+export interface DamonJsSearchOptions {
   requester: unknown;
   engine?: SearchEngines;
 }
 
-export interface KazagumoSearchResult {
+export interface DamonJsSearchResult {
   type: SearchResultTypes;
   playlistInfo?: {
     encoded: string;
@@ -157,7 +157,7 @@ export interface KazagumoSearchResult {
     };
     pluginInfo: unknown;
   };
-  tracks: KazagumoTrack[];
+  tracks: DamonJsTrack[];
 }
 
 export enum SearchResultTypes {
@@ -206,18 +206,18 @@ export enum PlayerState {
   DESTROYED,
 }
 
-export class KazagumoPlugin {
-  public load(kazagumo: Kazagumo): void {
-    throw new KazagumoError(1, 'Plugin must implement load()');
+export class DamonJsPlugin {
+  public load(kazagumo: DamonJs): void {
+    throw new DamonJsError(1, 'Plugin must implement load()');
   }
 
-  public unload(kazagumo: Kazagumo): void {
-    throw new KazagumoError(1, 'Plugin must implement unload()');
+  public unload(kazagumo: DamonJs): void {
+    throw new DamonJsError(1, 'Plugin must implement unload()');
   }
 }
 
 /* tslint:disable:max-classes-per-file */
-export class KazagumoError extends Error {
+export class DamonJsError extends Error {
   public code: number;
   public message: string;
   public constructor(code: number, message: string) {

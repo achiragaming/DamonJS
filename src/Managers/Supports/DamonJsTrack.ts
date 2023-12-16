@@ -1,23 +1,23 @@
-import { Kazagumo } from '../../Kazagumo';
+import { DamonJs } from '../../DamonJs';
 import {
   RawTrack,
   SupportedSources,
   SourceIDs,
-  KazagumoError,
+  DamonJsError,
   escapeRegExp,
   ResolveOptions,
   Events,
 } from '../../Modules/Interfaces';
 import { Track } from 'shoukaku';
-import { KazagumoPlayer } from '../KazagumoPlayer';
-import { KazagumoUtils } from '../../Modules/Utils';
+import { DamonJsPlayer } from '../DamonJsPlayer';
+import { DamonJsUtils } from '../../Modules/Utils';
 import { Utils } from 'discord.js';
 
-export class KazagumoTrack {
+export class DamonJsTrack {
   /**
-   * Kazagumo Instance
+   * DamonJs Instance
    */
-  public kazagumo: Kazagumo | undefined;
+  public kazagumo: DamonJs | undefined;
   /**
    * Track Requester
    */
@@ -99,14 +99,14 @@ export class KazagumoTrack {
 
   /**
    * Set kazagumo instance
-   * @param kazagumo Kazagumo instance
-   * @returns KazagumoTrack
+   * @param kazagumo DamonJs instance
+   * @returns DamonJsTrack
    */
-  setKazagumo(kazagumo: Kazagumo): KazagumoTrack {
+  setDamonJs(kazagumo: DamonJs): DamonJsTrack {
     this.kazagumo = kazagumo;
     if (this.sourceName === 'youtube' && this.identifier)
       this.artworkUrl = `https://img.youtube.com/vi/${this.identifier}/${
-        kazagumo.KazagumoOptions.defaultYoutubeThumbnail ?? 'hqdefault'
+        kazagumo.DamonJsOptions.defaultYoutubeThumbnail ?? 'hqdefault'
       }.jpg`;
 
     return this;
@@ -132,17 +132,17 @@ export class KazagumoTrack {
   /**
    * Resolve the track
    * @param options Resolve options
-   * @returns Promise<KazagumoTrack>
+   * @returns Promise<DamonJsTrack>
    */
-  public async resolve(options: ResolveOptions): Promise<KazagumoTrack> {
-    if (!this.kazagumo) throw new KazagumoError(1, 'Kazagumo is not set');
+  public async resolve(options: ResolveOptions): Promise<DamonJsTrack> {
+    if (!this.kazagumo) throw new DamonJsError(1, 'DamonJs is not set');
     if (
-      this.kazagumo.KazagumoOptions.trackResolver &&
-      typeof this.kazagumo.KazagumoOptions.trackResolver === 'function' &&
-      (await this.kazagumo.KazagumoOptions.trackResolver.bind(this)(options))
+      this.kazagumo.DamonJsOptions.trackResolver &&
+      typeof this.kazagumo.DamonJsOptions.trackResolver === 'function' &&
+      (await this.kazagumo.DamonJsOptions.trackResolver.bind(this)(options))
     )
       return this;
-    const resolveSource = this.kazagumo.KazagumoOptions?.sourceForceResolve?.includes(this.sourceName);
+    const resolveSource = this.kazagumo.DamonJsOptions?.sourceForceResolve?.includes(this.sourceName);
     const { forceResolve, overwrite } = options ? options : { forceResolve: false, overwrite: false };
 
     if (!forceResolve && this.readyToPlay) return this;
@@ -155,7 +155,7 @@ export class KazagumoTrack {
     this.kazagumo.emit(Events.Debug, `Resolving ${this.sourceName} track ${this.title}; Source: ${this.sourceName}`);
 
     const result = await this.getTrack(options.player ?? null);
-    if (!result) throw new KazagumoError(2, 'No results found');
+    if (!result) throw new DamonJsError(2, 'No results found');
 
     this.encoded = result.encoded;
     this.realUri = result.info.uri || null;
@@ -173,16 +173,16 @@ export class KazagumoTrack {
     return this;
   }
 
-  private async getTrack(player: KazagumoPlayer): Promise<Track> {
-    if (!this.kazagumo) throw new KazagumoError(1, 'Kazagumo is not set');
+  private async getTrack(player: DamonJsPlayer): Promise<Track> {
+    if (!this.kazagumo) throw new DamonJsError(1, 'DamonJs is not set');
 
-    const defaultSearchEngine = this.kazagumo.KazagumoOptions.defaultSearchEngine;
+    const defaultSearchEngine = this.kazagumo.DamonJsOptions.defaultSearchEngine;
     const source = (SourceIDs as any)[defaultSearchEngine || 'youtube'] || 'yt';
     const query = [this.author, this.title].filter((x) => !!x).join(' - ');
     const result = await player.search(`${query}`, { requester: this.requester, engine: source });
-    if (!result || !result.tracks.length) throw new KazagumoError(2, 'No results found');
+    if (!result || !result.tracks.length) throw new DamonJsError(2, 'No results found');
 
-    const shoukakUTracks = result.tracks.map((track) => KazagumoUtils.convertKazagumoTrackToTrack(track));
+    const shoukakUTracks = result.tracks.map((track) => DamonJsUtils.convertDamonJsTrackToTrack(track));
 
     if (this.author) {
       const author = [this.author, `${this.author} - Topic`];

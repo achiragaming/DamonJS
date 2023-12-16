@@ -1,4 +1,4 @@
-import { Events, Kazagumo, Plugins, SearchResultTypes } from '../src/Index';
+import { Events, DamonJs, Plugins, SearchResultTypes } from '../src/Index';
 import { Shoukaku, Connectors } from 'shoukaku';
 import { ChannelType, Client, GatewayIntentBits } from 'discord.js';
 
@@ -15,7 +15,7 @@ const Nodes = [
 
 const client = new Client({ intents: [Guilds, GuildVoiceStates, GuildMessages, MessageContent] });
 
-const kazagumo = new Kazagumo(
+const kazagumo = new DamonJs(
   {
     defaultSearchEngine: 'youtube',
     plugins: [new Plugins.PlayerMoved(client)],

@@ -1,11 +1,11 @@
-import { Kazagumo, Events } from '../Index';
-import { PlayerMovedState, KazagumoPlugin as Plugin } from '../Modules/Interfaces';
+import { DamonJs, Events } from '../Index';
+import { PlayerMovedState, DamonJsPlugin as Plugin } from '../Modules/Interfaces';
 
-export class KazagumoPlugin extends Plugin {
+export class DamonJsPlugin extends Plugin {
   /**
-   * Kazagumo instance.
+   * DamonJs instance.
    */
-  public kazagumo: Kazagumo | null = null;
+  public kazagumo: DamonJs | null = null;
 
   /**
    * Initialize the plugin.
@@ -17,9 +17,9 @@ export class KazagumoPlugin extends Plugin {
 
   /**
    * Load the plugin.
-   * @param kazagumo Kazagumo
+   * @param kazagumo DamonJs
    */
-  public load(kazagumo: Kazagumo): void {
+  public load(kazagumo: DamonJs): void {
     this.kazagumo = kazagumo;
     this.client.on('voiceStateUpdate', this.onVoiceStateUpdate.bind(this));
   }

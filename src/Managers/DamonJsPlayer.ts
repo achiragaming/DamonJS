@@ -1,5 +1,5 @@
-import { Kazagumo } from '../Kazagumo';
-import { KazagumoQueue } from './Supports/KazagumoQueue';
+import { DamonJs } from '../DamonJs';
+import { DamonJsQueue } from './Supports/DamonJsQueue';
 import {
   Player,
   Node,
@@ -14,34 +14,34 @@ import {
   Shoukaku,
 } from 'shoukaku';
 import {
-  KazagumoError,
-  KazagumoPlayerOptions,
+  DamonJsError,
+  DamonJsPlayerOptions,
   PlayerState,
   Events,
   PlayOptions,
-  KazagumoSearchOptions,
-  KazagumoSearchResult,
-  KazagumoEvents,
+  DamonJsSearchOptions,
+  DamonJsSearchResult,
+  DamonJsEvents,
   LoopState,
   SourceIDs,
   SearchResultTypes,
 } from '../Modules/Interfaces';
-import { KazagumoTrack } from './Supports/KazagumoTrack';
+import { DamonJsTrack } from './Supports/DamonJsTrack';
 import { Snowflake } from 'discord.js';
 
-export class KazagumoPlayer {
+export class DamonJsPlayer {
   /**
-   * Kazagumo options
+   * DamonJs options
    */
-  private options: KazagumoPlayerOptions;
+  private options: DamonJsPlayerOptions;
   /**
    * The text channel ID of the player
    */
   public textId: Snowflake;
   /**
-   * Kazagumo Instance
+   * DamonJs Instance
    */
-  private readonly kazagumo: Kazagumo;
+  private readonly kazagumo: DamonJs;
   /**
    * Shoukaku's Player instance
    */
@@ -61,7 +61,7 @@ export class KazagumoPlayer {
   /**
    * Player's queue
    */
-  public readonly queue: KazagumoQueue;
+  public readonly queue: DamonJsQueue;
   /**
    * Get the current state of the player
    */
@@ -77,30 +77,30 @@ export class KazagumoPlayer {
   /**
    * Search a track by query or uri
    * @param query Query
-   * @param options KazagumoOptions
-   * @returns Promise<KazagumoSearchResult>
+   * @param options DamonJsOptions
+   * @returns Promise<DamonJsSearchResult>
    */
-  search: (query: string, options: KazagumoSearchOptions) => Promise<KazagumoSearchResult>;
+  search: (query: string, options: DamonJsSearchOptions) => Promise<DamonJsSearchResult>;
 
   /**
-   * @param kazagumo Kazagumo instance
+   * @param kazagumo DamonJs instance
    * @param connection Shoukaku's Connection instance
    * @param player Shoukaku's Player instance
-   * @param options Kazagumo options
+   * @param options DamonJs options
    */
   constructor(
-    kazagumo: Kazagumo,
+    kazagumo: DamonJs,
     shoukaku: Shoukaku,
     player: Player,
     connection: Connection,
-    options: KazagumoPlayerOptions,
+    options: DamonJsPlayerOptions,
   ) {
     this.options = options;
     this.kazagumo = kazagumo;
     this.player = player;
     this.connection = connection;
     this.shoukaku = shoukaku;
-    this.queue = new KazagumoQueue();
+    this.queue = new DamonJsQueue();
     this.data = new Map(options.data);
     this.textId = this.options.textId;
     this.search = this.kazagumo.search.bind(this.kazagumo, this);
@@ -111,7 +111,7 @@ export class KazagumoPlayer {
    * Initialize the player
    */
   public async init() {
-    if (this.state === PlayerState.CONNECTED) throw new KazagumoError(1, 'Player is already initialized or initiazing');
+    if (this.state === PlayerState.CONNECTED) throw new DamonJsError(1, 'Player is already initialized or initiazing');
     await this.setGlobalVolume(this.options.volume);
     this.player.on('start', () => {
       if (!this.queue.current) return;
@@ -244,10 +244,10 @@ export class KazagumoPlayer {
   /**
    * Pause the player
    * @param pause Whether to pause or not
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  public async pause(pause: boolean): Promise<KazagumoPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+  public async pause(pause: boolean): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     if (this.paused === pause || !this.queue.totalSize) return this;
     await this.player.setPaused(pause);
 
@@ -257,10 +257,10 @@ export class KazagumoPlayer {
   /**
    * Set loop mode
    * @param [loop] Loop mode
-   * @returns KazagumoPlayer
+   * @returns DamonJsPlayer
    */
-  public setLoop(loop?: LoopState): KazagumoPlayer {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+  public setLoop(loop?: LoopState): DamonJsPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     if (loop === undefined) {
       if (this.loop === LoopState.None) this.loop = LoopState.Queue;
       else if (this.loop === LoopState.Queue) this.loop = LoopState.Track;
@@ -276,12 +276,12 @@ export class KazagumoPlayer {
    * Play a track
    * @param track Track to play
    * @param options Play options
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  public async play(track?: KazagumoTrack, options?: PlayOptions): Promise<KazagumoPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+  public async play(track?: DamonJsTrack, options?: PlayOptions): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
 
-    if (!track && !this.queue.totalSize) throw new KazagumoError(1, 'No track is available to play');
+    if (!track && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
 
     if (!options) options = { replaceCurrent: false };
 
@@ -289,10 +289,10 @@ export class KazagumoPlayer {
       this.queue.splice(this.queue.currentId, options.replaceCurrent && this.queue.current ? 1 : 0, track);
     }
 
-    if (!this.queue.current) throw new KazagumoError(1, 'No track is available to play');
+    if (!this.queue.current) throw new DamonJsError(1, 'No track is available to play');
 
     const current = this.queue.current;
-    current.setKazagumo(this.kazagumo);
+    current.setDamonJs(this.kazagumo);
 
     const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
 
@@ -313,36 +313,36 @@ export class KazagumoPlayer {
 
   /**
    * Skip the current track
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  public skip(): Promise<KazagumoPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+  public skip(): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     let trackId = this.queue.currentId + 1;
     if (!this.queue[trackId]) trackId = 0;
-    if (!this.queue[trackId]) throw new KazagumoError(2, `No songs available for skip.`);
+    if (!this.queue[trackId]) throw new DamonJsError(2, `No songs available for skip.`);
     return this.skipto(trackId);
   }
 
   /**
    * Skip to the previous track
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  public async previous(): Promise<KazagumoPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+  public async previous(): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     let trackId = this.queue.currentId - 1;
     if (!this.queue[trackId]) trackId = this.queue.length - 1;
-    if (!this.queue[trackId]) throw new KazagumoError(2, `No songs available for previous.`);
+    if (!this.queue[trackId]) throw new DamonJsError(2, `No songs available for previous.`);
     return this.skipto(trackId);
   }
 
   /**
    * Skip to a specifc track
    * @param trackId Id of the Track
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  public async skipto(trackId: number): Promise<KazagumoPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    if (!this.queue[trackId]) throw new KazagumoError(2, `${trackId} is an invalid track ID.`);
+  public async skipto(trackId: number): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    if (!this.queue[trackId]) throw new DamonJsError(2, `${trackId} is an invalid track ID.`);
     let realTrackId = trackId - 1;
     if (this.loop === LoopState.Track) realTrackId = this.queue.currentId - 1;
     if (!this.playable) {
@@ -358,16 +358,16 @@ export class KazagumoPlayer {
   /**
    * seek to a specifc position
    * @param position Position
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  public async seek(position: number): Promise<KazagumoPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    if (!this.queue.current) throw new KazagumoError(1, "Player has no current track in it's queue");
-    if (!this.queue.current.isSeekable) throw new KazagumoError(1, "The current track isn't seekable");
+  public async seek(position: number): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    if (!this.queue.current) throw new DamonJsError(1, "Player has no current track in it's queue");
+    if (!this.queue.current.isSeekable) throw new DamonJsError(1, "The current track isn't seekable");
 
     position = Number(position);
 
-    if (isNaN(position)) throw new KazagumoError(1, 'position must be a number');
+    if (isNaN(position)) throw new DamonJsError(1, 'position must be a number');
     if (position < 0 || position > (this.queue.current.length ?? 0))
       position = Math.max(Math.min(position, this.queue.current.length ?? 0), 0);
 
@@ -378,11 +378,11 @@ export class KazagumoPlayer {
   /**
    * Set the Global volume
    * @param volume Volume
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  public async setGlobalVolume(volume: number): Promise<KazagumoPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    if (isNaN(volume)) throw new KazagumoError(1, 'volume must be a number');
+  public async setGlobalVolume(volume: number): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    if (isNaN(volume)) throw new DamonJsError(1, 'volume must be a number');
     await this.player.setGlobalVolume(volume);
     return this;
   }
@@ -390,11 +390,11 @@ export class KazagumoPlayer {
   /**
    * Set the Filter volume
    * @param volume Volume
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  public async setFilterVolume(volume: number): Promise<KazagumoPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
-    if (isNaN(volume)) throw new KazagumoError(1, 'volume must be a number');
+  public async setFilterVolume(volume: number): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    if (isNaN(volume)) throw new DamonJsError(1, 'volume must be a number');
     await this.player.setFilterVolume(volume / 100);
     return this;
   }
@@ -402,10 +402,10 @@ export class KazagumoPlayer {
   /**
    * Set voice channel and move the player to the voice channel
    * @param voiceId Voice channel ID
-   * @returns KazagumoPlayer
+   * @returns DamonJsPlayer
    */
-  public setVoiceChannel(voiceId: Snowflake): KazagumoPlayer {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+  public setVoiceChannel(voiceId: Snowflake): DamonJsPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     this.state = PlayerState.CONNECTING;
 
     this.connection.channelId = voiceId;
@@ -428,10 +428,10 @@ export class KazagumoPlayer {
   /**
    * Set text channel
    * @param textId Text channel ID
-   * @returns KazagumoPlayer
+   * @returns DamonJsPlayer
    */
-  public setTextChannel(textId: Snowflake): KazagumoPlayer {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+  public setTextChannel(textId: Snowflake): DamonJsPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
 
     this.textId = textId;
 
@@ -441,31 +441,31 @@ export class KazagumoPlayer {
   /**
    * Set the Mute State
    * @param mute Mute State
-   * @returns KazagumoPlayer
+   * @returns DamonJsPlayer
    */
-  public setMute(mute?: boolean): KazagumoPlayer {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+  public setMute(mute?: boolean): DamonJsPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     this.connection.setMute(mute);
     return this;
   }
   /**
    * Set the Deaf State
    * @param deaf Deaf State
-   * @returns KazagumoPlayer
+   * @returns DamonJsPlayer
    */
-  public setDeaf(deaf?: boolean): KazagumoPlayer {
-    if (this.state === PlayerState.DESTROYED) throw new KazagumoError(1, 'Player is already destroyed');
+  public setDeaf(deaf?: boolean): DamonJsPlayer {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     this.connection.setDeaf(deaf);
     return this;
   }
 
   /**
    * Destroy the player
-   * @returns Promise<KazagumoPlayer>
+   * @returns Promise<DamonJsPlayer>
    */
-  async destroy(): Promise<KazagumoPlayer> {
+  async destroy(): Promise<DamonJsPlayer> {
     if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
-      throw new KazagumoError(1, 'Player is already destroyed');
+      throw new DamonJsError(1, 'Player is already destroyed');
 
     this.state = PlayerState.DESTROYING;
     await this.shoukaku.leaveVoiceChannel(this.guildId);
@@ -477,7 +477,7 @@ export class KazagumoPlayer {
     return this;
   }
 
-  private emit<K extends keyof KazagumoEvents>(event: K, ...args: KazagumoEvents[K]): void {
+  private emit<K extends keyof DamonJsEvents>(event: K, ...args: DamonJsEvents[K]): void {
     this.kazagumo.emit(event, ...args);
   }
 }
