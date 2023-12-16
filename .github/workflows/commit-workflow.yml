@@ -39,6 +39,14 @@ jobs:
       - name: Get Version from package.json
         id: get_version
         run: echo "{name}={$(node -p "require('./package.json').version")}" >> $GITHUB_OUTPUT
+        
+      - name: Check if get_version exists
+        id: check_version
+        run: echo "${{ needs.build.outputs.get_version}}"
+        
+      - name: Output get_version data if exists
+        if: steps.check_version.outputs.exists == 'true'
+        run: echo "${{ needs.build.outputs.get_version }}"
 
   publish-dev-to-npm:
     needs: build
