@@ -26,7 +26,7 @@ npm i damonjs
 ```
 
 ## Latest Metadata
-- Version: 1.1.5
+- Version: 1.1.6
 - Pre-release: False  
 - Last Build: 8/16/2023 
 
@@ -45,13 +45,13 @@ Description: This is a discord bot that written in ts and using damonjs to under
 
 ## Recent Changes
 Stay updated with our recent enhancements and fixes:
-- Check out our full changelog in the [GitHub repository](https://github.com/achiragaming/damonjs/releases)
+- Check out our full changelog in the [GitHub repository](https://github.com/achiragaming/DamonJs/releases)
 
 ## Need Help or Assistance?
 For seamless integration or any queries, explore our support options:
 - Visit the [DamonJS support server](https://discord.gg/noerror)
 - Seek assistance at the [Shoukaku support server](https://discord.gg/FVqbtGu) (#development)
-- Report bugs or issues conveniently on our [GitHub page](https://github.com/achiragaming/damonjs/issues/new/choose)
+- Report bugs or issues conveniently on our [GitHub page](https://github.com/achiragaming/DamonJs/issues/new/choose)
 
 ## Meet Our Contributors
 Our dedicated contributors:
@@ -61,4 +61,4 @@ Our dedicated contributors:
 
 Ready to experience the enhanced capabilities of DamonJS? Get started now!
 
-[![Downloads](https://img.shields.io/npm/dm/damonjs)](https://www.npmjs.com/package/damonjs) [![npm](https://img.shields.io/npm/v/damonjs)](https://www.npmjs.com/package/damonjs) [![GitHub contributors](https://img.shields.io/github/contributors/achiragaming/damonjs)](https://github.com/achiragaming/damonjs/graphs/contributors) [![GitHub last commit](https://img.shields.io/github/last-commit/achiragaming/damonjs)](https://github.com/achiragaming/damonjs/commits/main) [![NPM](https://img.shields.io/npm/l/damonjs)](https://www.npmjs.com/package/damonjs)
+[![Downloads](https://img.shields.io/npm/dm/damonjs)](https://www.npmjs.com/package/damonjs) [![npm](https://img.shields.io/npm/v/damonjs)](https://www.npmjs.com/package/damonjs) [![GitHub contributors](https://img.shields.io/github/contributors/achiragaming/damonjs)](https://github.com/achiragaming/DamonJs/graphs/contributors) [![GitHub last commit](https://img.shields.io/github/last-commit/achiragaming/damonjs)](https://github.com/achiragaming/DamonJs/commits/main) [![NPM](https://img.shields.io/npm/l/damonjs)](https://www.npmjs.com/package/damonjs)

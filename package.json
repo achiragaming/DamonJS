@@ -1,6 +1,6 @@
 {
   "name": "damonjs",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "preview": false,
   "description": "A modified Shoukaku wrapper with enhanced queue support.",
   "main": "dist/Index.js",
@@ -52,7 +52,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/achiragaming/damonjs.git"
+    "url": "git+https://github.com/achiragaming/DamonJs.git"
   },
   "contributors": [
     "AchiraGaming (https://github.com/achiragaming)"
