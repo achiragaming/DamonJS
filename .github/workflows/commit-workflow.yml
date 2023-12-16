@@ -36,6 +36,10 @@ jobs:
         id: get_preview
         run: echo ::set-output name=preview::$(node -p "require('./package.json').preview || 'false'")
 
+      - name: Get Version from package.json
+        id: get_version
+        run: echo ::set-output name=tag::$(node -e "console.log(require('./package.json').version)")
+
   upload-to-npm:
     needs: build
     runs-on: ubuntu-latest
@@ -77,9 +81,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
+          tag_name: v${{ needs.build.outputs.get_version.tag }}
+          release_name: Release v${{ needs.build.outputs.get_version.tag }}
           body: |
-            Release v${{ github.run_number }}
+            Release v${{ needs.build.outputs.get_version.tag }}
           draft: false
           prerelease: ${{ needs.build.outputs.get_preview.preview == 'true' }}
