@@ -36,9 +36,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: project-folder
-          path: |
-            ./
-            !./node_modules
+          path: ./dist
 
       - id: get_version
         run: |
