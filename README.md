@@ -17,7 +17,7 @@ Experience the power of a modified, enhanced version of [Kazagumo](https://githu
 ## Explore Our Documentation
 Delve into our comprehensive documentation for a seamless experience. Our documentation features a user-friendly search function for quick access.
 > Dive into [Shoukaku](https://github.com/Deivu/Shoukaku) by [Deivu](https://github.com/Deivu) at [Shoukaku Documentation](https://deivu.github.io/Shoukaku)  
-> Explore DamonJS Documentation at [DamonJS Docs](https://achiragaming.github.io/damonjs/)
+> Explore DamonJS Documentation at [DamonJS Docs](https://achiragaming.github.io/DamonJS/)
 
 ## Easy Installation
 Get started effortlessly with npm installation:
@@ -26,7 +26,7 @@ npm i damonjs
 ```
 
 ## Latest Metadata
-- Version: 1.2.0
+- Version: 1.2.2
 - Pre-release: False  
 - Last Build: 8/16/2023 
 
@@ -45,13 +45,13 @@ Description: This is a discord bot that written in ts and using damonjs to under
 
 ## Recent Changes
 Stay updated with our recent enhancements and fixes:
-- Check out our full changelog in the [GitHub repository](https://github.com/achiragaming/DamonJs/releases)
+- Check out our full changelog in the [GitHub repository](https://github.com/achiragaming/DamonJS/releases)
 
 ## Need Help or Assistance?
 For seamless integration or any queries, explore our support options:
 - Visit the [DamonJS support server](https://discord.gg/noerror)
 - Seek assistance at the [Shoukaku support server](https://discord.gg/FVqbtGu) (#development)
-- Report bugs or issues conveniently on our [GitHub page](https://github.com/achiragaming/DamonJs/issues/new/choose)
+- Report bugs or issues conveniently on our [GitHub page](https://github.com/achiragaming/DamonJS/issues/new/choose)
 
 ## Meet Our Contributors
 Our dedicated contributors:
@@ -61,4 +61,4 @@ Our dedicated contributors:
 
 Ready to experience the enhanced capabilities of DamonJS? Get started now!
 
-[![Downloads](https://img.shields.io/npm/dm/damonjs)](https://www.npmjs.com/package/damonjs) [![npm](https://img.shields.io/npm/v/damonjs)](https://www.npmjs.com/package/damonjs) [![GitHub contributors](https://img.shields.io/github/contributors/achiragaming/damonjs)](https://github.com/achiragaming/DamonJs/graphs/contributors) [![GitHub last commit](https://img.shields.io/github/last-commit/achiragaming/damonjs)](https://github.com/achiragaming/DamonJs/commits/main) [![NPM](https://img.shields.io/npm/l/damonjs)](https://www.npmjs.com/package/damonjs)
+[![Downloads](https://img.shields.io/npm/dm/damonjs)](https://www.npmjs.com/package/damonjs) [![npm](https://img.shields.io/npm/v/damonjs)](https://www.npmjs.com/package/damonjs) [![GitHub contributors](https://img.shields.io/github/contributors/achiragaming/DamonJS)](https://github.com/achiragaming/DamonJS/graphs/contributors) [![GitHub last commit](https://img.shields.io/github/last-commit/achiragaming/DamonJS)](https://github.com/achiragaming/DamonJS/commits/main) [![NPM](https://img.shields.io/npm/l/damonjs)](https://www.npmjs.com/package/damonjs)
