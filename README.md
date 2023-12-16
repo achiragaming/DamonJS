@@ -26,7 +26,7 @@ npm i damonjs
 ```
 
 ## Latest Metadata
-- Version: 1.0.6
+- Version: 1.0.7
 - Pre-release: False  
 - Last Build: 8/15/2023 
 
@@ -61,4 +61,4 @@ Our dedicated contributors:
 
 Ready to experience the enhanced capabilities of DamonJS? Get started now!
 
-[![Downloads](https://img.shields.io/npm/dm/damonjs)](https://www.npmjs.com/package/damonjs) [![npm](https://img.shields.io/npm/v/damonjs)](https://www.npmjs.com/package/damonjs) [![GitHub contributors](https://img.shields.io/github/contributors/NoErrorStudio/damonjs)](https://github.com/NoErrorStudio/damonjs/graphs/contributors) [![GitHub last commit](https://img.shields.io/github/last-commit/NoErrorStudio/damonjs)](https://github.com/NoErrorStudio/damonjs/commits/main) [![NPM](https://img.shields.io/npm/l/damonjs)](https://www.npmjs.com/package/damonjs)
+[![Downloads](https://img.shields.io/npm/dm/damonjs)](https://www.npmjs.com/package/damonjs) [![npm](https://img.shields.io/npm/v/damonjs)](https://www.npmjs.com/package/damonjs) [![GitHub contributors](https://img.shields.io/github/contributors/achiragaming/damonjs)](https://github.com/achiragaming/damonjs/graphs/contributors) [![GitHub last commit](https://img.shields.io/github/last-commit/achiragaming/damonjs)](https://github.com/achiragaming/damonjs/commits/main) [![NPM](https://img.shields.io/npm/l/damonjs)](https://www.npmjs.com/package/damonjs)
