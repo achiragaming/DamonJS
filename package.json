@@ -1,7 +1,7 @@
 {
   "name": "damonjs",
-  "version": "1.0.1",
-  "preview": false,
+  "version": "1.0.2",
+  "preview": true,
   "description": "A modified Shoukaku wrapper with enhanced queue support.",
   "main": "dist/Index.js",
   "types": "dist/Index.d.ts",
