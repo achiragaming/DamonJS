@@ -35,7 +35,7 @@ jobs:
       - name: Archive project folder
         uses: actions/upload-artifact@v2
         with:
-          name: project-folder
+          name: dist-folder
           path: ./dist
 
       - id: get_version
@@ -60,7 +60,8 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: project-folder
+          name: dist-folder
+          path: dist
 
       - run: ls
 
@@ -81,10 +82,11 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: project-folder
+          name: dist-folder
+          path: dist
 
       - run: ls
-      
+
       - name: Publish to NPM (Prod Version)
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc

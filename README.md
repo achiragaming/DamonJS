@@ -26,7 +26,7 @@ npm i damonjs
 ```
 
 ## Latest Metadata
-- Version: 1.1.1
+- Version: 1.1.2
 - Pre-release: True  
 - Last Build: 8/15/2023 
 
