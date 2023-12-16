@@ -31,8 +31,55 @@ jobs:
       - name: Build
         run: |
           npm run build
-          
-      - name: Publish to NPM
+
+      - name: Get Preview from package.json
+        id: get_preview
+        run: echo ::set-output name=preview::$(node -p "require('./package.json').preview || 'false'")
+
+  upload-to-npm:
+    needs: build
+    runs-on: ubuntu-latest
+
+    if: needs.build.outputs.get_preview.preview == 'true'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Publish to NPM (Dev Version)
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          npm publish --tag=dev
+
+  publish-to-npm:
+    needs: build
+    runs-on: ubuntu-latest
+
+    if: needs.build.outputs.get_preview.preview != 'true'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Publish to NPM (Normal Version)
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           npm publish
+
+  publish-to-github-releases:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            Release v${{ github.run_number }}
+          draft: false
+          prerelease: ${{ needs.build.outputs.get_preview.preview == 'true' }}
