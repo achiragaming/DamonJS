@@ -34,17 +34,17 @@ jobs:
 
       - name: Get Preview from package.json
         id: get_preview
-        run: echo "{name}={$(node -p "require('./package.json').preview || false")}" >> $GITHUB_OUTPUT
+        run: echo "::set-output name=preview::$(node -p "require('./package.json').preview || false")"
 
       - name: Get Version from package.json
         id: get_version
-        run: echo "{name}={$(node -p "require('./package.json').version")}" >> $GITHUB_OUTPUT
+        run: echo "::set-output name=tag::$(node -p "require('./package.json').version")"
 
   publish-dev-to-npm:
     needs: build
     runs-on: ubuntu-latest
 
-    if: needs.build.outputs.get_preview == true
+    if: needs.build.outputs.get_preview.preview == true
 
     steps:
       - uses: actions/checkout@v3
@@ -58,7 +58,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    if: needs.build.outputs.get_preview != true
+    if: needs.build.outputs.get_preview.preview != true
 
     steps:
       - uses: actions/checkout@v3
@@ -79,9 +79,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ needs.build.outputs.get_version }}
-          release_name: Release v${{ needs.build.outputs.get_version }}
+          tag_name: v${{ needs.build.outputs.get_version.tag }}
+          release_name: Release v${{ needs.build.outputs.get_version.tag }}
           body: |
-            Release v${{ needs.build.outputs.get_version }}
+            Release v${{ needs.build.outputs.get_version.tag }}
           draft: false
-          prerelease: ${{ needs.build.outputs.get_preview == true }}
+          prerelease: ${{ needs.build.outputs.get_preview.preview == true }}
