@@ -2,7 +2,7 @@ name: Commit Workflow
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
 
 jobs:
   build:
@@ -12,7 +12,10 @@ jobs:
       matrix:
         node-version: [18.x]
 
-      
+    outputs:
+      tag: ${{ steps.get_version.outputs.tag }}
+      preview: ${{ steps.get_preview.outputs.preview }}
+
     steps:
       - uses: actions/checkout@v3
 
@@ -38,12 +41,11 @@ jobs:
           preview=$(node -p 'require("./package.json").preview ? "true" : "false"')
           echo "::set-output name=preview::$preview"
 
-
   publish-dev:
     needs: build
     runs-on: ubuntu-latest
 
-    if: needs.build.get_preview.outputs.preview == 'true'
+    if: needs.build.outputs.preview == 'true'
 
     steps:
       - uses: actions/checkout@v3
@@ -57,7 +59,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    if: needs.build.get_preview.outputs.preview != 'true'
+    if: needs.build.outputs.preview != 'true'
 
     steps:
       - uses: actions/checkout@v3
@@ -76,16 +78,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ needs.build.get_version.outputs.tag }}
-          release_name: Release v${{ needs.build.get_version.outputs.tag }}
+          tag_name: v${{ needs.build.outputs.tag }}
+          release_name: Release v${{ needs.build.outputs.tag }}
           body: |
-            Release v${{ needs.build.get_version.outputs.tag }}
+            Release v${{ needs.build.outputs.tag }}
           draft: false
-          prerelease: ${{ needs.build.get_preview.outputs.preview == 'true' }}
+          prerelease: ${{ needs.build.outputs.preview == 'true' }}
 
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          file_glob: "build/*.*"
+          file_glob: 'build/*.*'
