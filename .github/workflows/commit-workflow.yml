@@ -62,6 +62,8 @@ jobs:
         with:
           name: project-folder
 
+      - run: ls
+
       - name: Publish to NPM (Dev Version)
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
@@ -81,6 +83,8 @@ jobs:
         with:
           name: project-folder
 
+      - run: ls
+      
       - name: Publish to NPM (Prod Version)
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
