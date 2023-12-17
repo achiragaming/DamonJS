@@ -26,9 +26,9 @@ npm i damonjs
 ```
 
 ## Latest Metadata
-- Version: 1.2.2
+- Version: 1.2.3
 - Pre-release: False  
-- Last Build: 8/16/2023 
+- Last Build: 8/17/2023 
 
 ## Extend with Plugins
 Enhance your experience with our official Spotify plugin:
@@ -40,7 +40,7 @@ Easily set up Lavalink with our step-by-step tutorial with images provided by [W
 ## Example Usage
 Explore practical implementations in our examples folder located at `examples`. These examples showcase various functionalities and usage scenarios to guide you through the integration process.
 
-### Example 1: [A simple discord music bot made with damonjs](examples/bot.ts)
+### Example 1: [A simple discord music bot made with damonjs](https://github.com/achiragaming/DamonJs/examples/bot.ts)
 Description: This is a discord bot that written in ts and using damonjs to understand how this package works.
 
 ## Recent Changes
