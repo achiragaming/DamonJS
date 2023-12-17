@@ -41,7 +41,7 @@ export class DamonJsPlayer {
   /**
    * DamonJs Instance
    */
-  private readonly kazagumo: DamonJs;
+  private readonly damonjs: DamonJs;
   /**
    * Shoukaku's Player instance
    */
@@ -83,27 +83,27 @@ export class DamonJsPlayer {
   search: (query: string, options: DamonJsSearchOptions) => Promise<DamonJsSearchResult>;
 
   /**
-   * @param kazagumo DamonJs instance
+   * @param damonjs DamonJs instance
    * @param connection Shoukaku's Connection instance
    * @param player Shoukaku's Player instance
    * @param options DamonJs options
    */
   constructor(
-    kazagumo: DamonJs,
+    damonjs: DamonJs,
     shoukaku: Shoukaku,
     player: Player,
     connection: Connection,
     options: DamonJsPlayerOptions,
   ) {
     this.options = options;
-    this.kazagumo = kazagumo;
+    this.damonjs = damonjs;
     this.player = player;
     this.connection = connection;
     this.shoukaku = shoukaku;
     this.queue = new DamonJsQueue();
     this.data = new Map(options.data);
     this.textId = this.options.textId;
-    this.search = this.kazagumo.search.bind(this.kazagumo, this);
+    this.search = this.damonjs.search.bind(this.damonjs, this);
     this.isTrackPlaying = false;
   }
 
@@ -289,24 +289,26 @@ export class DamonJsPlayer {
       this.queue.splice(this.queue.currentId, options.replaceCurrent && this.queue.current ? 1 : 0, track);
     }
 
-    if (!this.queue.current) throw new DamonJsError(1, 'No track is available to play');
+    if (this.playable) {
+      this.queue.currentId--;
+      await this.player.stopTrack();
+    } else {
+      if (!this.queue.current) throw new DamonJsError(1, 'No track is available to play');
+      const current = this.queue.current;
+      current.setDamonJs(this.damonjs);
 
-    const current = this.queue.current;
-    current.setDamonJs(this.kazagumo);
+      const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
 
-    const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
-
-    if (resolveResult instanceof Error) {
-      this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
-      this.emit(Events.Debug, `Player ${this.guildId} resolve error: ${resolveResult.message} skipping`);
-      return this.skip();
+      if (resolveResult instanceof Error) {
+        this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
+        this.emit(Events.Debug, `Player ${this.guildId} resolve error: ${resolveResult.message} skipping`);
+        return this.skip();
+      }
+      const playOptions = { track: current.encoded, options: {} };
+      if (options) playOptions.options = { ...options, noReplace: false };
+      else playOptions.options = { noReplace: false };
+      await this.player.playTrack(playOptions);
     }
-
-    const playOptions = { track: current.encoded, options: {} };
-    if (options) playOptions.options = { ...options, noReplace: false };
-    else playOptions.options = { noReplace: false };
-
-    await this.player.playTrack(playOptions);
 
     return this;
   }
@@ -469,7 +471,7 @@ export class DamonJsPlayer {
 
     this.state = PlayerState.DESTROYING;
     await this.shoukaku.leaveVoiceChannel(this.guildId);
-    this.kazagumo.players.delete(this.guildId);
+    this.damonjs.players.delete(this.guildId);
     this.state = PlayerState.DESTROYED;
     this.emit(Events.PlayerDestroy, this);
     this.emit(Events.Debug, `Player destroyed; Guild id: ${this.guildId}`);
@@ -478,6 +480,6 @@ export class DamonJsPlayer {
   }
 
   private emit<K extends keyof DamonJsEvents>(event: K, ...args: DamonJsEvents[K]): void {
-    this.kazagumo.emit(event, ...args);
+    this.damonjs.emit(event, ...args);
   }
 }

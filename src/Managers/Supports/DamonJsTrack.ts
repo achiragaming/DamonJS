@@ -17,7 +17,7 @@ export class DamonJsTrack {
   /**
    * DamonJs Instance
    */
-  public kazagumo: DamonJs | undefined;
+  public damonjs: DamonJs | undefined;
   /**
    * Track Requester
    */
@@ -54,7 +54,7 @@ export class DamonJsTrack {
   public resolvedBySource: boolean = false;
 
   constructor(raw: RawTrack, requester: unknown) {
-    this.kazagumo = undefined;
+    this.damonjs = undefined;
 
     this.encoded = raw.encoded;
     this.sourceName = raw.info.sourceName;
@@ -98,15 +98,15 @@ export class DamonJsTrack {
   }
 
   /**
-   * Set kazagumo instance
-   * @param kazagumo DamonJs instance
+   * Set damonjs instance
+   * @param damonjs DamonJs instance
    * @returns DamonJsTrack
    */
-  setDamonJs(kazagumo: DamonJs): DamonJsTrack {
-    this.kazagumo = kazagumo;
+  setDamonJs(damonjs: DamonJs): DamonJsTrack {
+    this.damonjs = damonjs;
     if (this.sourceName === 'youtube' && this.identifier)
       this.artworkUrl = `https://img.youtube.com/vi/${this.identifier}/${
-        kazagumo.DamonJsOptions.defaultYoutubeThumbnail ?? 'hqdefault'
+        damonjs.DamonJsOptions.defaultYoutubeThumbnail ?? 'hqdefault'
       }.jpg`;
 
     return this;
@@ -117,7 +117,7 @@ export class DamonJsTrack {
    */
   get readyToPlay(): boolean {
     return (
-      this.kazagumo !== undefined &&
+      this.damonjs !== undefined &&
       !!this.encoded &&
       !!this.sourceName &&
       !!this.identifier &&
@@ -135,14 +135,14 @@ export class DamonJsTrack {
    * @returns Promise<DamonJsTrack>
    */
   public async resolve(options: ResolveOptions): Promise<DamonJsTrack> {
-    if (!this.kazagumo) throw new DamonJsError(1, 'DamonJs is not set');
+    if (!this.damonjs) throw new DamonJsError(1, 'DamonJs is not set');
     if (
-      this.kazagumo.DamonJsOptions.trackResolver &&
-      typeof this.kazagumo.DamonJsOptions.trackResolver === 'function' &&
-      (await this.kazagumo.DamonJsOptions.trackResolver.bind(this)(options))
+      this.damonjs.DamonJsOptions.trackResolver &&
+      typeof this.damonjs.DamonJsOptions.trackResolver === 'function' &&
+      (await this.damonjs.DamonJsOptions.trackResolver.bind(this)(options))
     )
       return this;
-    const resolveSource = this.kazagumo.DamonJsOptions?.sourceForceResolve?.includes(this.sourceName);
+    const resolveSource = this.damonjs.DamonJsOptions?.sourceForceResolve?.includes(this.sourceName);
     const { forceResolve, overwrite } = options ? options : { forceResolve: false, overwrite: false };
 
     if (!forceResolve && this.readyToPlay) return this;
@@ -152,7 +152,7 @@ export class DamonJsTrack {
       return this;
     }
 
-    this.kazagumo.emit(Events.Debug, `Resolving ${this.sourceName} track ${this.title}; Source: ${this.sourceName}`);
+    this.damonjs.emit(Events.Debug, `Resolving ${this.sourceName} track ${this.title}; Source: ${this.sourceName}`);
 
     const result = await this.getTrack(options.player ?? null);
     if (!result) throw new DamonJsError(2, 'No results found');
@@ -174,9 +174,9 @@ export class DamonJsTrack {
   }
 
   private async getTrack(player: DamonJsPlayer): Promise<Track> {
-    if (!this.kazagumo) throw new DamonJsError(1, 'DamonJs is not set');
+    if (!this.damonjs) throw new DamonJsError(1, 'DamonJs is not set');
 
-    const defaultSearchEngine = this.kazagumo.DamonJsOptions.defaultSearchEngine;
+    const defaultSearchEngine = this.damonjs.DamonJsOptions.defaultSearchEngine;
     const source = (SourceIDs as any)[defaultSearchEngine || 'youtube'] || 'yt';
     const query = [this.author, this.title].filter((x) => !!x).join(' - ');
     const result = await player.search(`${query}`, { requester: this.requester, engine: source });

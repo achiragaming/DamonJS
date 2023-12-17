@@ -5,7 +5,7 @@ export class DamonJsPlugin extends Plugin {
   /**
    * DamonJs instance.
    */
-  public kazagumo: DamonJs | null = null;
+  public damonjs: DamonJs | null = null;
 
   /**
    * Initialize the plugin.
@@ -17,10 +17,10 @@ export class DamonJsPlugin extends Plugin {
 
   /**
    * Load the plugin.
-   * @param kazagumo DamonJs
+   * @param damonjs DamonJs
    */
-  public load(kazagumo: DamonJs): void {
-    this.kazagumo = kazagumo;
+  public load(damonjs: DamonJs): void {
+    this.damonjs = damonjs;
     this.client.on('voiceStateUpdate', this.onVoiceStateUpdate.bind(this));
   }
 
@@ -29,17 +29,17 @@ export class DamonJsPlugin extends Plugin {
    */
   public unload(): void {
     this.client.removeListener('voiceStateUpdate', this.onVoiceStateUpdate.bind(this));
-    this.kazagumo = null;
+    this.damonjs = null;
   }
 
   private onVoiceStateUpdate(oldState: any, newState: any): void {
-    if (!this.kazagumo || oldState.id !== this.client.user.id) return;
+    if (!this.damonjs || oldState.id !== this.client.user.id) return;
 
     const newChannelId = newState.channelID || newState.channelId;
     const oldChannelId = oldState.channelID || oldState.channelId;
     const guildId = newState.guild.id;
 
-    const player = this.kazagumo.players.get(guildId);
+    const player = this.damonjs.players.get(guildId);
     if (!player) return;
 
     let state: PlayerMovedState = PlayerMovedState.Unknown;
@@ -49,6 +49,6 @@ export class DamonJsPlugin extends Plugin {
 
     if (state === PlayerMovedState.Unknown) return;
 
-    this.kazagumo.emit(Events.PlayerMoved, player, state, { oldChannelId, newChannelId });
+    this.damonjs.emit(Events.PlayerMoved, player, state, { oldChannelId, newChannelId });
   }
 }

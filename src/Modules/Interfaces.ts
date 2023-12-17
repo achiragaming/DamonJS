@@ -207,11 +207,11 @@ export enum PlayerState {
 }
 
 export class DamonJsPlugin {
-  public load(kazagumo: DamonJs): void {
+  public load(damonjs: DamonJs): void {
     throw new DamonJsError(1, 'Plugin must implement load()');
   }
 
-  public unload(kazagumo: DamonJs): void {
+  public unload(damonjs: DamonJs): void {
     throw new DamonJsError(1, 'Plugin must implement unload()');
   }
 }

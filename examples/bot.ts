@@ -15,7 +15,7 @@ const Nodes = [
 
 const client = new Client({ intents: [Guilds, GuildVoiceStates, GuildMessages, MessageContent] });
 
-const kazagumo = new DamonJs(
+const damonjs = new DamonJs(
   {
     defaultSearchEngine: 'youtube',
     plugins: [new Plugins.PlayerMoved(client)],
@@ -33,14 +33,14 @@ const kazagumo = new DamonJs(
 
 client.on('ready', () => console.log(client?.user?.tag + ' Ready!'));
 
-kazagumo.shoukaku.on('ready', (name) => console.log(`Lavalink ${name}: Ready!`));
-kazagumo.shoukaku.on('error', (name, error) => console.error(`Lavalink ${name}: Error Caught,`, error));
-kazagumo.shoukaku.on('close', (name, code, reason) =>
+damonjs.shoukaku.on('ready', (name) => console.log(`Lavalink ${name}: Ready!`));
+damonjs.shoukaku.on('error', (name, error) => console.error(`Lavalink ${name}: Error Caught,`, error));
+damonjs.shoukaku.on('close', (name, code, reason) =>
   console.warn(`Lavalink ${name}: Closed, Code ${code}, Reason ${reason || 'No reason'}`),
 );
-kazagumo.shoukaku.on('debug', (name, info) => console.debug(`Lavalink ${name}: Debug,`, info));
+damonjs.shoukaku.on('debug', (name, info) => console.debug(`Lavalink ${name}: Debug,`, info));
 
-kazagumo.on(Events.PlayerCreate, async (player) => {
+damonjs.on(Events.PlayerCreate, async (player) => {
   const channel =
     client.channels.cache.get(player.textId) || (await client.channels.fetch(player.textId).catch(() => null));
   if (channel && channel.isTextBased()) {
@@ -48,16 +48,16 @@ kazagumo.on(Events.PlayerCreate, async (player) => {
     player.data.set('message', message);
   }
 });
-kazagumo.on(Events.PlayerStart, async (player, track) => {
+damonjs.on(Events.PlayerStart, async (player, track) => {
   const message = player.data.get('message');
   message && (await message.edit({ content: `Started playing ${track.title}` }));
 });
-kazagumo.on(Events.PlayerEnd, async (player) => {
+damonjs.on(Events.PlayerEnd, async (player) => {
   const message = player.data.get('message');
   message && (await message.edit({ content: `Finished playing` }));
 });
 
-kazagumo.on(Events.PlayerEmpty, async (player) => {
+damonjs.on(Events.PlayerEmpty, async (player) => {
   const message = player.data.get('message');
   message && (await message.edit({ content: `Destroyed player due to inactivity.` }));
 });
@@ -75,7 +75,7 @@ client.on('messageCreate', async (message) => {
         await message.reply({ content: 'You need to be in a voice channel to use this command!' });
         return;
       }
-      const player = await kazagumo.createPlayer({
+      const player = await damonjs.createPlayer({
         guildId: message.guild.id,
         textId: message.channel.id,
         voiceId: channel.id,
@@ -103,7 +103,7 @@ client.on('messageCreate', async (message) => {
       return;
     }
     if (message.content.startsWith('!skip')) {
-      const player = kazagumo.players.get(message.guild.id);
+      const player = damonjs.players.get(message.guild.id);
       if (!player) {
         await message.reply({ content: 'No player found!' });
         return;
@@ -116,7 +116,7 @@ client.on('messageCreate', async (message) => {
       return;
     }
     if (message.content.startsWith('!previous')) {
-      const player = kazagumo.players.get(message.guild.id);
+      const player = damonjs.players.get(message.guild.id);
       if (!player) {
         await message.reply({ content: 'No player found!' });
         return;

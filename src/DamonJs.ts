@@ -100,7 +100,7 @@ export class DamonJs extends EventEmitter {
     });
     const shoukakuConnection = this.shoukaku.connections.get(options.guildId as string);
     if (!shoukakuConnection) throw new DamonJsError(1, 'Cannot find the shoukaku connection');
-    const kazagumoPlayer = new (this.DamonJsOptions.extends?.player ?? DamonJsPlayer)(
+    const damonjsPlayer = new (this.DamonJsOptions.extends?.player ?? DamonJsPlayer)(
       this,
       this.shoukaku,
       shoukakuPlayer,
@@ -111,10 +111,10 @@ export class DamonJs extends EventEmitter {
         volume: isNaN(Number(options.volume)) ? 100 : (options.volume as number),
       },
     );
-    await kazagumoPlayer.init();
-    this.players.set(options.guildId, kazagumoPlayer);
-    this.emit(Events.PlayerCreate, kazagumoPlayer);
-    return kazagumoPlayer;
+    await damonjsPlayer.init();
+    this.players.set(options.guildId, damonjsPlayer);
+    this.emit(Events.PlayerCreate, damonjsPlayer);
+    return damonjsPlayer;
   }
 
   /**
