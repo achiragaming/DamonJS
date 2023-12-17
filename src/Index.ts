@@ -9,5 +9,5 @@ export * from './DamonJs';
 export { DamonJsTrack, DamonJsQueue, DamonJsPlayer, Plugins };
 export * from './Modules/Interfaces';
 
-export const version = '1.4.1';
+export const version = '1.2.5';
  
