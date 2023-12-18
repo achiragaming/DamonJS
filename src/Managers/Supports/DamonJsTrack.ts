@@ -152,7 +152,11 @@ export class DamonJsTrack {
       return this;
     }
 
-    this.damonjs.emit(Events.Debug, `Resolving ${this.sourceName} track ${this.title}; Source: ${this.sourceName}`);
+    this.damonjs.emit(
+      Events.Debug,
+      options.player,
+      `Resolving ${this.sourceName} track ${this.title}; Source: ${this.sourceName}`,
+    );
 
     const result = await this.getTrack(options.player ?? null);
     if (!result) throw new DamonJsError(2, 'No results found');
