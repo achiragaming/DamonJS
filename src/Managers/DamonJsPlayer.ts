@@ -123,8 +123,8 @@ export class DamonJsPlayer {
       if (!this.queue.current) return this.emit(Events.Debug, this, `No Previous track to stop ${this.guildId}`);
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
         return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
-      const lastTrack = this.queue.current;
       this.isTrackPlaying = false;
+      this.emit(Events.PlayerEnd, this, this.queue.current);
       if (data.reason === 'replaced') return this.emit(Events.PlayerEmpty, this);
       if (this.loop === LoopState.Track) {
         this.queue.currentId = this.queue.currentId;
@@ -133,7 +133,6 @@ export class DamonJsPlayer {
       } else if (this.loop === LoopState.None) {
         this.queue.currentId++;
       }
-      this.emit(Events.PlayerEnd, this, lastTrack);
       if (!this.queue.current) {
         return this.emit(Events.PlayerEmpty, this);
       }
