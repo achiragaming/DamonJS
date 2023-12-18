@@ -106,7 +106,7 @@ export interface DamonJsEvents {
   playerStuck: [player: DamonJsPlayer, data: TrackStuckEvent];
   playerResolveError: [player: DamonJsPlayer, track: DamonJsTrack, message?: string];
   playerMoved: [player: DamonJsPlayer, state: PlayerMovedState, channels: PlayerMovedChannels];
-  debug: [message: string];
+  debug: [player: DamonJsPlayer, message: string];
 }
 export enum Events {
   PlayerDestroy = 'playerDestroy',

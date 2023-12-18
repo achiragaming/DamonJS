@@ -122,7 +122,7 @@ export class DamonJsPlayer {
     this.player.on('end', (data) => {
       // This event emits STOPPED reason when destroying, so return to prevent double emit
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
-        return this.emit(Events.Debug, `Player ${this.guildId} destroyed from end event`);
+        return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
 
       this.isTrackPlaying = false;
 
@@ -301,7 +301,7 @@ export class DamonJsPlayer {
 
       if (resolveResult instanceof Error) {
         this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
-        this.emit(Events.Debug, `Player ${this.guildId} resolve error: ${resolveResult.message} skipping`);
+        this.emit(Events.Debug, this, `Player ${this.guildId} resolve error: ${resolveResult.message} skipping`);
         return this.skip();
       }
       const playOptions = { track: current.encoded, options: {} };
@@ -422,7 +422,7 @@ export class DamonJsPlayer {
     );
 
     this.state = PlayerState.CONNECTED;
-    this.emit(Events.Debug, `Player ${this.guildId} moved to voice channel ${voiceId}`);
+    this.emit(Events.Debug, this, `Player ${this.guildId} moved to voice channel ${voiceId}`);
 
     return this;
   }
@@ -474,7 +474,7 @@ export class DamonJsPlayer {
     this.damonjs.players.delete(this.guildId);
     this.state = PlayerState.DESTROYED;
     this.emit(Events.PlayerDestroy, this);
-    this.emit(Events.Debug, `Player destroyed; Guild id: ${this.guildId}`);
+    this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
 
     return this;
   }
