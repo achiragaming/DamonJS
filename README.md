@@ -1,5 +1,6 @@
 # DamonJS
 #### Elevating Discord Music Bots to New Heights 🚀
+*Inspired by Takiyo Kazagumo*
 
 ![DamonJS](https://gcdnb.pbrd.co/images/0HWqipcj64ef.jpg?o=1)
 > DamonJS © NoError Studios
@@ -51,8 +52,6 @@ For seamless integration or any queries, explore our support options:
 
 ## Meet Our Contributors
 Our dedicated contributors:
-- Deivu: Owner of Shoukaku ([GitHub](https://github.com/Deivu))
-- Takiyo: Original owner of the project ([GitHub](https://github.com/Takiyo0))
 - AchiraGaming: Contributor for modifications and enhancements ([GitHub](https://github.com/achiragaming))
 
 Ready to experience the enhanced capabilities of DamonJS? Get started now!
