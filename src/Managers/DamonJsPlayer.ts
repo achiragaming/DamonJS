@@ -12,6 +12,14 @@ import {
   LoadType,
   Connection,
   Shoukaku,
+  Band,
+  KaraokeSettings,
+  TimescaleSettings,
+  FreqSettings,
+  RotationSettings,
+  DistortionSettings,
+  ChannelMixSettings,
+  LowPassSettings,
 } from 'shoukaku';
 import {
   DamonJsError,
@@ -100,7 +108,7 @@ export class DamonJsPlayer {
     this.player = player;
     this.connection = connection;
     this.shoukaku = shoukaku;
-    this.queue = new DamonJsQueue();
+    this.queue = new DamonJsQueue(this);
     this.data = new Map(options.data);
     this.textId = this.options.textId;
     this.search = this.damonjs.search.bind(this.damonjs, this);
@@ -244,7 +252,7 @@ export class DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     if (this.paused === pause || !this.queue.totalSize) return this;
     await this.player.setPaused(pause);
-
+    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -259,10 +267,8 @@ export class DamonJsPlayer {
       if (this.loop === LoopState.None) this.loop = LoopState.Queue;
       else if (this.loop === LoopState.Queue) this.loop = LoopState.Track;
       else if (this.loop === LoopState.Track) this.loop = LoopState.None;
-      return this;
-    }
-
-    this.loop = loop;
+    } else this.loop = loop;
+    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -348,6 +354,7 @@ export class DamonJsPlayer {
       this.queue.currentId = realTrackId;
       await this.player.stopTrack();
     }
+    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -368,6 +375,7 @@ export class DamonJsPlayer {
       position = Math.max(Math.min(position, this.queue.current.length ?? 0), 0);
 
     await this.player.seekTo(position);
+    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -380,6 +388,7 @@ export class DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     if (isNaN(volume)) throw new DamonJsError(1, 'volume must be a number');
     await this.player.setGlobalVolume(volume);
+    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -392,6 +401,7 @@ export class DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     if (isNaN(volume)) throw new DamonJsError(1, 'volume must be a number');
     await this.player.setFilterVolume(volume / 100);
+    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -417,7 +427,7 @@ export class DamonJsPlayer {
 
     this.state = PlayerState.CONNECTED;
     this.emit(Events.Debug, this, `Player ${this.guildId} moved to voice channel ${voiceId}`);
-
+    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -430,7 +440,7 @@ export class DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
 
     this.textId = textId;
-
+    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -442,6 +452,7 @@ export class DamonJsPlayer {
   public setMute(mute?: boolean): DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     this.connection.setMute(mute);
+    this.emit(Events.InitQueue, this);
     return this;
   }
   /**
@@ -452,6 +463,139 @@ export class DamonJsPlayer {
   public setDeaf(deaf?: boolean): DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     this.connection.setDeaf(deaf);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the equalizer settings applied to the currently playing track
+   * @param equalizer An array of objects that conforms to the Bands type that define volumes at different frequencies
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setEqualizer(equalizer: Band[]): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.setEqualizer(equalizer);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the karaoke settings applied to the currently playing track
+   * @param karaoke An object that conforms to the KaraokeSettings type that defines a range of frequencies to mute
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setKaraoke(karaoke?: KaraokeSettings): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.setKaraoke(karaoke);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the timescale settings applied to the currently playing track
+   * @param timescale An object that conforms to the TimescaleSettings type that defines the time signature to play the audio at
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setTimescale(timescale?: TimescaleSettings): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.setTimescale(timescale);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the tremolo settings applied to the currently playing track
+   * @param tremolo An object that conforms to the FreqSettings type that defines an oscillation in volume
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setTremolo(tremolo?: FreqSettings): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.setTremolo(tremolo);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the vibrato settings applied to the currently playing track
+   * @param vibrato An object that conforms to the FreqSettings type that defines an oscillation in pitch
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setVibrato(vibrato?: FreqSettings): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.setVibrato(vibrato);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the rotation settings applied to the currently playing track
+   * @param rotation An object that conforms to the RotationSettings type that defines the frequency of audio rotating round the listener
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setRotation(rotation?: RotationSettings): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.setRotation(rotation);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the distortion settings applied to the currently playing track
+   * @param distortion An object that conforms to DistortionSettings that defines distortions in the audio
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setDistortion(distortion: DistortionSettings): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.setDistortion(distortion);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the channel mix settings applied to the currently playing track
+   * @param channelMix An object that conforms to ChannelMixSettings that defines how much the left and right channels affect each other (setting all factors to 0.5 causes both channels to get the same audio)
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setChannelMix(channelMix: ChannelMixSettings): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.setChannelMix(channelMix);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the low pass settings applied to the currently playing track
+   * @param lowPass An object that conforms to LowPassSettings that defines the amount of suppression on higher frequencies
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setLowPass(lowPass: LowPassSettings): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.setLowPass(lowPass);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Change the all filter settings applied to the currently playing track
+   * @param filters An object that conforms to FilterOptions that defines all filters to apply/modify
+   * @returns Promise<DamonJsPlayer>
+   */
+  public async setFilters(filters: FilterOptions): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.setFilters(filters);
+    this.emit(Events.InitQueue, this);
+    return this;
+  }
+
+  /**
+   * Move player to another node
+   * @param name? Name of node to move to, or the default ideal node
+   * @returns true if the player was moved, false if not
+   */
+  public async movePlayer(name?: string): Promise<DamonJsPlayer> {
+    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    await this.player.movePlayer(name);
+    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -472,8 +616,7 @@ export class DamonJsPlayer {
 
     return this;
   }
-
-  private emit<K extends keyof DamonJsEvents>(event: K, ...args: DamonJsEvents[K]): void {
+  public emit<K extends keyof DamonJsEvents>(event: K, ...args: DamonJsEvents[K]): void {
     this.damonjs.emit(event, ...args);
   }
 }

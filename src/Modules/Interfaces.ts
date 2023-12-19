@@ -106,6 +106,7 @@ export interface DamonJsEvents {
   playerStuck: [player: DamonJsPlayer, data: TrackStuckEvent];
   playerResolveError: [player: DamonJsPlayer, track: DamonJsTrack, message?: string];
   playerMoved: [player: DamonJsPlayer, state: PlayerMovedState, channels: PlayerMovedChannels];
+  initQueue: [player: DamonJsPlayer];
   debug: [player: DamonJsPlayer, message: string];
 }
 export enum Events {
@@ -123,6 +124,7 @@ export enum Events {
   PlayerResolveError = 'playerResolveError',
   PlayerMoved = 'playerMoved',
   Debug = 'debug',
+  InitQueue = 'initQueue',
 }
 export interface PlayerMovedChannels {
   oldChannelId?: string | null;

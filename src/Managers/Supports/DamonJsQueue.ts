@@ -1,7 +1,15 @@
 import { DamonJsTrack } from './DamonJsTrack';
-import { DamonJsError } from '../../Modules/Interfaces';
+import { DamonJsError, Events } from '../../Modules/Interfaces';
+import { DamonJsPlayer } from '../DamonJsPlayer';
 
+export interface DamonJsQueue {
+  player: DamonJsPlayer;
+}
 export class DamonJsQueue extends Array<DamonJsTrack> {
+  constructor(player: DamonJsPlayer) {
+    super();
+    this.player = player;
+  }
   /** Get the size of queue */
   public get size() {
     return this.length;
@@ -41,10 +49,9 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
     if (Array.isArray(track) && track.some((t) => !(t instanceof DamonJsTrack)))
       throw new DamonJsError(1, 'Track must be an instance of DamonJsTrack');
     if (!Array.isArray(track) && !(track instanceof DamonJsTrack)) track = [track];
-
     if (Array.isArray(track)) for (const t of track) this.push(t);
     else this.push(track);
-    // ; Array.isArray(track) ? this.push(...track) : this.push(track);
+    this.player.emit(Events.InitQueue, this.player);
     return this;
   }
 
@@ -57,6 +64,7 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
     if (position < 0 || position >= this.length)
       throw new DamonJsError(1, 'Position must be between 0 and ' + (this.length - 1));
     this.splice(position, 1);
+    this.player.emit(Events.InitQueue, this.player);
     return this;
   }
 
@@ -72,13 +80,14 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
     // Reconstruct the queue with the shuffled unplayed songs after the current song
     const newQueue = [...this.slice(0, this.currentId + 1), ...unplayedSongs];
     this.splice(0, this.length, ...newQueue);
-
+    this.player.emit(Events.InitQueue, this.player);
     return this;
   }
   /** Clear the queue */
   public clear(): DamonJsQueue {
     this.currentId = 0;
     this.splice(0, this.length);
+    this.player.emit(Events.InitQueue, this.player);
     return this;
   }
 }
