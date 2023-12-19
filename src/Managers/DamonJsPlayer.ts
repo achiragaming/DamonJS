@@ -354,7 +354,6 @@ export class DamonJsPlayer {
       this.queue.currentId = realTrackId;
       await this.player.stopTrack();
     }
-    this.emit(Events.InitQueue, this);
     return this;
   }
 
@@ -438,7 +437,6 @@ export class DamonJsPlayer {
    */
   public setTextChannel(textId: Snowflake): DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
-
     this.textId = textId;
     this.emit(Events.InitQueue, this);
     return this;
@@ -606,14 +604,12 @@ export class DamonJsPlayer {
   async destroy(): Promise<DamonJsPlayer> {
     if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
       throw new DamonJsError(1, 'Player is already destroyed');
-
     this.state = PlayerState.DESTROYING;
     await this.shoukaku.leaveVoiceChannel(this.guildId);
     this.damonjs.players.delete(this.guildId);
     this.state = PlayerState.DESTROYED;
     this.emit(Events.PlayerDestroy, this);
     this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
-
     return this;
   }
   public emit<K extends keyof DamonJsEvents>(event: K, ...args: DamonJsEvents[K]): void {
