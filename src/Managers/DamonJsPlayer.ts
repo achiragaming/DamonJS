@@ -319,7 +319,7 @@ export class DamonJsPlayer {
       else playOptions.options = { noReplace: false };
       await this.player.playTrack(playOptions);
     }
-
+    this.player.paused = false;
     return this;
   }
 
