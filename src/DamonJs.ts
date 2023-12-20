@@ -30,6 +30,7 @@ import {
 import { DamonJsPlayer } from './Managers/DamonJsPlayer';
 import { DamonJsTrack } from './Managers/Supports/DamonJsTrack';
 import { Snowflake } from 'discord.js';
+import { exit } from 'process';
 
 // Add other methods related to your base class
 
@@ -88,7 +89,7 @@ export class DamonJs extends EventEmitter {
    */
   public async createPlayer<T extends DamonJsPlayer>(options: CreatePlayerOptions): Promise<T | DamonJsPlayer> {
     const exist = this.players.get(options.guildId);
-    if (exist) return exist;
+    if (exist ) return exist;
     if (!options.deaf) options.deaf = false;
     if (!options.mute) options.mute = false;
     const shoukakuPlayer = await this.shoukaku.joinVoiceChannel({

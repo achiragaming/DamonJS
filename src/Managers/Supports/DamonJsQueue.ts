@@ -33,7 +33,9 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
     return this.reduce((acc, cur) => acc + (cur.length || 0), 0);
   }
 
-  /** Current playing trackId */
+  /** Current playing trackId
+   * Do not do anything to this if you do anything to this player is likely gonna fail
+   */
   public currentId: number = 0;
 
   /** Current playing track */
@@ -63,6 +65,7 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
   public remove(position: number): DamonJsQueue {
     if (position < 0 || position >= this.length)
       throw new DamonJsError(1, 'Position must be between 0 and ' + (this.length - 1));
+    if (position === this.currentId) throw new DamonJsError(1, 'You cannot remove the current Playing song');
     this.splice(position, 1);
     this.player.emit(Events.InitQueue, this.player);
     return this;
@@ -85,8 +88,9 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
   }
   /** Clear the queue */
   public clear(): DamonJsQueue {
+    const currentTrack = this.splice(this.currentId, 1); // Remove and keep the element at the specified index
+    this.splice(0, this.length, ...currentTrack);
     this.currentId = 0;
-    this.splice(0, this.length);
     this.player.emit(Events.InitQueue, this.player);
     return this;
   }
