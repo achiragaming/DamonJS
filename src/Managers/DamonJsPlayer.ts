@@ -151,29 +151,28 @@ export class DamonJsPlayer {
       return this.play();
     });
 
-    this.player.on('closed', (data: WebSocketClosedEvent) => {
+    this.player.on('closed', async (data: WebSocketClosedEvent) => {
       if (!this.queue.current) return this.emit(Events.Debug, this, `No Previous Track to Close ${this.guildId}`);
-      this.isTrackPlaying = false;
       this.emit(Events.PlayerClosed, this, this.queue.current, data);
     });
 
-    this.player.on('exception', (data: TrackExceptionEvent) => {
+    this.player.on('exception', async (data: TrackExceptionEvent) => {
+      await this.skip();
       if (!this.queue.current) return this.emit(Events.Debug, this, `No Previous Track to Exception ${this.guildId}`);
-      this.isTrackPlaying = false;
       this.emit(Events.PlayerException, this, this.queue.current, data);
     });
 
-    this.player.on('update', (data: PlayerUpdate) => {
+    this.player.on('update', async (data: PlayerUpdate) => {
       if (!this.queue.current) return this.emit(Events.Debug, this, `No Previous Track to Update ${this.guildId}`);
       this.queue.current.position = data.state.position || 0;
       this.emit(Events.PlayerUpdate, this, this.queue.current, data);
     });
-    this.player.on('stuck', (data: TrackStuckEvent) => {
+    this.player.on('stuck', async (data: TrackStuckEvent) => {
+      await this.skip();
       if (!this.queue.current) return this.emit(Events.Debug, this, `No Track to Stuck ${this.guildId}`);
-      this.isTrackPlaying = false;
       this.emit(Events.PlayerStuck, this, this.queue.current, data);
     });
-    this.player.on('resumed', () => {
+    this.player.on('resumed', async () => {
       if (!this.queue.current) return this.emit(Events.Debug, this, `No Track to Resume ${this.guildId}`);
       this.emit(Events.PlayerResumed, this, this.queue.current);
     });
