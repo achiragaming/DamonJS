@@ -152,14 +152,12 @@ export class DamonJsPlayer {
     });
 
     this.player.on('closed', async (data: WebSocketClosedEvent) => {
-      if (!this.queue.current) return this.emit(Events.Debug, this, `No Previous Track to Close ${this.guildId}`);
-      this.emit(Events.PlayerClosed, this, this.queue.current, data);
+      this.emit(Events.PlayerClosed, this, data);
     });
 
     this.player.on('exception', async (data: TrackExceptionEvent) => {
       await this.skip();
-      if (!this.queue.current) return this.emit(Events.Debug, this, `No Previous Track to Exception ${this.guildId}`);
-      this.emit(Events.PlayerException, this, this.queue.current, data);
+      this.emit(Events.PlayerException, this, data);
     });
 
     this.player.on('update', async (data: PlayerUpdate) => {
@@ -169,12 +167,10 @@ export class DamonJsPlayer {
     });
     this.player.on('stuck', async (data: TrackStuckEvent) => {
       await this.skip();
-      if (!this.queue.current) return this.emit(Events.Debug, this, `No Track to Stuck ${this.guildId}`);
-      this.emit(Events.PlayerStuck, this, this.queue.current, data);
+      this.emit(Events.PlayerStuck, this, data);
     });
     this.player.on('resumed', async () => {
-      if (!this.queue.current) return this.emit(Events.Debug, this, `No Track to Resume ${this.guildId}`);
-      this.emit(Events.PlayerResumed, this, this.queue.current);
+      this.emit(Events.PlayerResumed, this);
     });
 
     this.state = PlayerState.CONNECTED;

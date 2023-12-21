@@ -99,11 +99,11 @@ export interface DamonJsEvents {
   playerStart: [player: DamonJsPlayer, track: DamonJsTrack];
   playerEnd: [player: DamonJsPlayer, track: DamonJsTrack];
   playerEmpty: [player: DamonJsPlayer];
-  playerClosed: [player: DamonJsPlayer, track: DamonJsTrack, data: WebSocketClosedEvent];
+  playerClosed: [player: DamonJsPlayer, data: WebSocketClosedEvent];
   playerUpdate: [player: DamonJsPlayer, track: DamonJsTrack, data: PlayerUpdate];
-  playerException: [player: DamonJsPlayer, track: DamonJsTrack, data: TrackExceptionEvent];
-  playerResumed: [player: DamonJsPlayer, track: DamonJsTrack];
-  playerStuck: [player: DamonJsPlayer, track: DamonJsTrack, data: TrackStuckEvent];
+  playerException: [player: DamonJsPlayer, data: TrackExceptionEvent];
+  playerResumed: [player: DamonJsPlayer];
+  playerStuck: [player: DamonJsPlayer, data: TrackStuckEvent];
   playerResolveError: [player: DamonJsPlayer, track: DamonJsTrack, message?: string];
   playerMoved: [player: DamonJsPlayer, state: PlayerMovedState, channels: PlayerMovedChannels];
   initQueue: [player: DamonJsPlayer];
