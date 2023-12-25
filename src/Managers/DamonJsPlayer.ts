@@ -130,10 +130,10 @@ export class DamonJsPlayer {
     this.player.on('end', (data) => {
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
         return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
-      if (!this.queue.current) return this.emit(Events.Debug, this, `No Previous Track to Play ${this.guildId}`);
-      this.isTrackPlaying = false;
 
-      this.emit(Events.PlayerEnd, this, this.queue.current);
+      this.isTrackPlaying = false;
+      const lastTrack = this.queue[this.queue.lastId]
+      lastTrack && this.emit(Events.PlayerEnd, this, lastTrack);
 
       if (data.reason === 'replaced') return this.emit(Events.PlayerEmpty, this);
 
@@ -314,6 +314,7 @@ export class DamonJsPlayer {
       else playOptions.options = { noReplace: false };
       await this.player.playTrack(playOptions);
     }
+    this.queue.setCurrentId(this.queue.currentId)
     this.player.paused = false;
     return this;
   }
@@ -355,10 +356,10 @@ export class DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     if (!this.queue[trackId]) throw new DamonJsError(2, `${trackId} is an invalid track ID.`);
     if (!this.playable) {
-      if (this.loop !== LoopState.Track) this.queue.currentId = trackId;
+      if (this.loop !== LoopState.Track) this.queue.setCurrentId(trackId)
       await this.play();
     } else {
-      if (this.loop !== LoopState.Track) this.queue.currentId = trackId - 1;
+      if (this.loop !== LoopState.Track) this.queue.setCurrentId(trackId - 1);
       await this.player.stopTrack();
     }
     return this;
