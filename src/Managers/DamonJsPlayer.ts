@@ -132,8 +132,10 @@ export class DamonJsPlayer {
         return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
 
       this.isTrackPlaying = false;
-      const lastTrack = this.queue[this.queue.lastId]
-      lastTrack && this.emit(Events.PlayerEnd, this, lastTrack);
+
+      const lastTrack = this.queue[this.queue.lastId];
+      if (lastTrack) this.emit(Events.PlayerEnd, this, lastTrack)
+
 
       if (data.reason === 'replaced') return this.emit(Events.PlayerEmpty, this);
 
