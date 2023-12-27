@@ -128,9 +128,9 @@ export class DamonJsPlayer {
     });
 
     this.player.on('end', (data) => {
-      const playedTrack = this.queue[this.queue.playedTrackId];
-      if (playedTrack && this.isTrackPlaying) this.emit(Events.PlayerEnd, this, playedTrack);
       this.isTrackPlaying = false;
+      const playedTrack = this.queue[this.queue.playedTrackId];
+      if (playedTrack) this.emit(Events.PlayerEnd, this, playedTrack);
 
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
         return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
