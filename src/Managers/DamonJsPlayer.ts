@@ -140,7 +140,7 @@ export class DamonJsPlayer {
         this.queue.currentId = this.queue.currentId;
       } else if (this.loop === LoopState.Queue && this.queue.isEnd) {
         this.queue.currentId = 0;
-      } else if (this.loop === LoopState.None) {
+      } else {
         this.queue.currentId++;
       }
 
