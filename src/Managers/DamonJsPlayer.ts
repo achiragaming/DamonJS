@@ -612,9 +612,9 @@ export class DamonJsPlayer {
    * @param name? Name of node to move to, or the default ideal node
    * @returns true if the player was moved, false if not
    */
-  public async movePlayer(name?: string): Promise<DamonJsPlayer> {
+  public async move(name?: string): Promise<DamonJsPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
-    await this.player.movePlayer(name);
+    await this.player.move(name);
     this.emit(Events.InitQueue, this);
     return this;
   }
