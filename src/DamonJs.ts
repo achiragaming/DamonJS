@@ -47,15 +47,10 @@ export class DamonJs extends EventEmitter {
    * @param nodes NodeOption[]
    * @param options ShoukakuOptions
    */
-  constructor(
-    public DamonJsOptions: DamonJsOptionsOwO,
-    connector: Connector,
-    nodes: NodeOption[],
-    options: ShoukakuOptions = {},
-  ) {
+  constructor(public DamonJsOptions: DamonJsOptionsOwO, shoukaku: Shoukaku) {
     super();
 
-    this.shoukaku = new Shoukaku(connector, nodes, options);
+    this.shoukaku = shoukaku;
 
     if (this.DamonJsOptions.plugins) {
       for (const [, plugin] of this.DamonJsOptions.plugins.entries()) {

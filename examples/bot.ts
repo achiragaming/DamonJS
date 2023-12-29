@@ -20,15 +20,13 @@ const damonjs = new DamonJs(
     defaultSearchEngine: 'youtube',
     plugins: [new Plugins.PlayerMoved(client)],
   },
-  new Connectors.DiscordJS(client),
-  Nodes,
-  {
+  new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
     moveOnDisconnect: false,
     resume: false,
     resumeTimeout: 30,
     reconnectTries: 2,
     restTimeout: 10000,
-  },
+  }),
 );
 
 client.on('ready', () => console.log(client?.user?.tag + ' Ready!'));
