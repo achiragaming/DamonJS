@@ -93,4 +93,10 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
     this.player.emit(Events.InitQueue, this.player);
     return this;
   }
+  public removeDupes(): DamonJsQueue {
+    const newQueue = [...new Set(this)];
+    this.splice(0, this.length, ...newQueue);
+    this.player.emit(Events.InitQueue, this.player);
+    return this;
+  }
 }
