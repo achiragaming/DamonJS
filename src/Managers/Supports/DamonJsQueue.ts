@@ -94,8 +94,26 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
     return this;
   }
   public removeDupes(): DamonJsQueue {
-    const newQueue = [...new Set(this)];
-    this.splice(0, this.length, ...newQueue);
+    const trackUris = new Set();
+    const playedTracks = this.slice(0, this.currentId);
+    const unplayedTracks = this.slice(this.currentId + 1);
+    const currentTrack = this[this.currentId];
+    trackUris.add(currentTrack.uri);
+
+    const newPlayedTracks = playedTracks.filter((track) => {
+      if (trackUris.has(track.uri)) return false;
+      trackUris.add(track.uri);
+      return true;
+    });
+
+    const newUnplayedTracks = unplayedTracks.filter((track) => {
+      if (trackUris.has(track.uri)) return false;
+      trackUris.add(track.uri);
+      return true;
+    });
+
+    this.currentId = newPlayedTracks.length;
+    this.splice(0, this.length, ...newPlayedTracks, currentTrack, ...newUnplayedTracks);
     this.player.emit(Events.InitQueue, this.player);
     return this;
   }

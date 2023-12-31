@@ -281,15 +281,15 @@ export class DamonJsPlayer {
    * @param {PlayOptions} options Play options
    * @returns {Promise<DamonJsPlayer>}
    */
-  public async play(track?: DamonJsTrack, options?: PlayOptions): Promise<DamonJsPlayer> {
+  public async play(tracks?: DamonJsTrack[], options?: PlayOptions): Promise<DamonJsPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
 
-    if (!track && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
+    if (!tracks && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
 
     if (!options) options = { replaceCurrent: false };
 
-    if (track) {
-      this.queue.splice(this.queue.currentId, options.replaceCurrent && this.queue.current ? 1 : 0, track);
+    if (tracks) {
+      this.queue.splice(this.queue.currentId, options.replaceCurrent && this.queue.current ? 1 : 0, ...tracks);
     }
 
     if (this.playable) {
