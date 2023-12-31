@@ -125,15 +125,12 @@ export class DamonJsPlayer {
       if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
       this.isTrackPlaying = true;
       this.player.paused = false;
-      this.queue.setCurrentId(this.queue.currentId);
       this.emit(Events.PlayerStart, this, this.queue.current);
     });
 
     this.player.on('end', (data) => {
       this.isTrackPlaying = false;
-      const playedTrack = this.queue[this.queue.playedTrackId];
-      if (playedTrack) this.emit(Events.PlayerEnd, this, playedTrack);
-
+      this.emit(Events.PlayerEnd, this);
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
         return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
       if (data.reason === 'replaced') return this.emit(Events.PlayerEmpty, this);
@@ -162,7 +159,7 @@ export class DamonJsPlayer {
     });
 
     this.player.on('update', async (data: PlayerUpdate) => {
-      if (!this.queue.current) return this.emit(Events.Debug, this, `No Previous Track to Update ${this.guildId}`);
+      if (!this.queue.current) return this.emit(Events.Debug, this, `No Track to Update ${this.guildId}`);
       this.queue.current.position = data.state.position || 0;
       this.emit(Events.PlayerUpdate, this, this.queue.current, data);
     });
@@ -370,10 +367,10 @@ export class DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
     if (!this.queue[trackId]) throw new DamonJsError(2, `${trackId} is an invalid track ID.`);
     if (!this.playable) {
-      if (this.loop !== LoopState.Track) this.queue.setCurrentId(trackId);
+      if (this.loop !== LoopState.Track) this.queue.currentId = trackId;
       await this.play();
     } else {
-      if (this.loop !== LoopState.Track) this.queue.setCurrentId(trackId - 1);
+      if (this.loop !== LoopState.Track) this.queue.currentId = trackId - 1;
       await this.player.stopTrack();
     }
     return this;

@@ -37,19 +37,9 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
    * Do not do anything to this if you do anything to this player is likely gonna fail
    */
   public currentId: number = 0;
-
-  /**
-   * played track id
-   * Do not do anything to this if you do anything to this player is likely gonna fail
-   */
-  public playedTrackId: number = 0;
   /** Current playing track */
   public get current(): DamonJsTrack | undefined {
     return this.at(this.currentId);
-  }
-  public setCurrentId(trackId: number) {
-    this.playedTrackId = this.currentId;
-    this.currentId = trackId;
   }
   /**
    * Add track(s) to the queue
