@@ -12,6 +12,10 @@ export interface DamonJsOptions {
   sourceForceResolve?: string[];
   /** The track resolver. Make sure you set <DamonJsTrack>.track for it to work. (I'm not responsible for any error during playback if you don't set it right) */
   trackResolver?: (this: DamonJsTrack, options?: ResolveOptions) => Promise<boolean>;
+  /**
+   * The track resolve threshold.
+   */
+  trackResolveThreshold?: number;
   /** The default youtube thumbnail's size */
   defaultYoutubeThumbnail?: YoutubeThumbnail;
   /** Extend some of the Structures */
