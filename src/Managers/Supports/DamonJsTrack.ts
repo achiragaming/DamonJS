@@ -12,7 +12,6 @@ import { Track } from 'shoukaku';
 import { DamonJsPlayer } from '../DamonJsPlayer';
 import { DamonJsUtils } from '../../Modules/Utils';
 import { Utils } from 'discord.js';
-import stringSimilarity from 'string-similarity';
 export class DamonJsTrack {
   /**
    * DamonJs Instance
@@ -176,52 +175,14 @@ export class DamonJsTrack {
     }
     return this;
   }
-  private fixTitle(title: string) {
-    const target = title
-      .replace(/\[.*?\]/g, '') // Remove content within square brackets
-      .replace(/\(.*?\)/g, '') // Remove content within parentheses
-      .replace(/- .*? -/g, '') // Remove content within hyphens
-      .replace(/:.*/, '') // Remove content after colon
-      .replace(/\|.*$/, '') // Remove content after the first occurrence of |
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .trim();
-
-    // Trim excess spaces
-    return target.trim();
-  }
   private async getTrack(player: DamonJsPlayer): Promise<Track> {
     if (!this.damonjs) throw new DamonJsError(1, 'DamonJs is not set');
     const defaultSearchEngine = this.damonjs.DamonJsOptions.defaultSearchEngine;
     const source = (SourceIDs as any)[defaultSearchEngine || 'youtube'] || 'yt';
     const query = [this.author, this.title].filter((x) => !!x).join(' - ');
     const result = await player.search(`${query}`, { requester: this.requester, engine: source });
-    const threshold = this.damonjs.DamonJsOptions.trackResolveThreshold || 0.4;
     if (!result || !result.tracks.length) throw new DamonJsError(2, 'No results found');
     const shoukakUTracks = result.tracks.map((track) => DamonJsUtils.convertDamonJsTrackToTrack(track));
-    const matchedSongs: { threshold: number; track: Track }[] = [];
-    for (const track of shoukakUTracks) {
-      const titleScore = stringSimilarity.compareTwoStrings(
-        this.title,
-        [track.info.author, this.fixTitle(track.info.title)].filter((x) => !!x).join(' - '),
-      );
-      const authorScore = stringSimilarity.compareTwoStrings(this.author, track.info.author);
-      const duration = this.length ? this.length : 0;
-      const durationScore = track.info.length >= duration - 2000 && track.info.length <= duration + 2000 ? 1 : 0;
-
-      const totalScore = (titleScore + durationScore + authorScore) / 3;
-      matchedSongs.push({
-        threshold: totalScore || 0,
-        track,
-      });
-    }
-    const matchedSong = matchedSongs
-      .filter((val) => val.threshold >= threshold)
-      .map((val) => {
-        return val.track;
-      })
-      .at(0);
-    if (!matchedSong) throw new DamonJsError(2, 'No results found');
-
-    return matchedSong;
+    return shoukakUTracks[0];
   }
 }
