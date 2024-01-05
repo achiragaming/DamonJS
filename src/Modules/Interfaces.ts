@@ -4,6 +4,10 @@ import { DamonJsTrack } from '../Managers/Supports/DamonJsTrack';
 import { PlayerUpdate, TrackExceptionEvent, TrackStuckEvent, Utils, WebSocketClosedEvent } from 'shoukaku';
 import { Snowflake } from 'discord.js';
 export interface DamonJsOptions {
+  /** Skip the track on exception */
+  skipOnException?: boolean;
+  /** Skip the track on stuck */
+  skipOnStuck?: boolean;
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
   /** DamonJs plugins */
