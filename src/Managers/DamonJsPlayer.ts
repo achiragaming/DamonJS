@@ -154,7 +154,7 @@ export class DamonJsPlayer {
     });
 
     this.player.on('exception', async (data: TrackExceptionEvent) => {
-      this.damonjs.DamonJsOptions.skipOnException && (await this.stopTrack());
+      if (this.damonjs.DamonJsOptions.skipOnException) await this.stopTrack();
       this.emit(Events.PlayerException, this, data);
     });
 
@@ -164,7 +164,7 @@ export class DamonJsPlayer {
       this.emit(Events.PlayerUpdate, this, this.queue.current, data);
     });
     this.player.on('stuck', async (data: TrackStuckEvent) => {
-      this.damonjs.DamonJsOptions.skipOnStuck && (await this.stopTrack());
+      if (this.damonjs.DamonJsOptions.skipOnStuck) await this.stopTrack();
       this.emit(Events.PlayerStuck, this, data);
     });
     this.player.on('resumed', async () => {
