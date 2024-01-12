@@ -131,11 +131,10 @@ export class DamonJsPlayer {
     this.player.on('end', (data) => {
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
         return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
-
+      this.isTrackPlaying = false;
       this.emit(Events.PlayerEnd, this);
-      
+
       if (data.reason === 'replaced') {
-        this.isTrackPlaying = false;
         return this.emit(Events.PlayerEmpty, this);
       }
 
@@ -148,7 +147,6 @@ export class DamonJsPlayer {
       }
 
       if (!this.queue.current) {
-        this.isTrackPlaying = false;
         return this.emit(Events.PlayerEmpty, this);
       }
       return this.play();
