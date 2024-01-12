@@ -129,9 +129,12 @@ export class DamonJsPlayer {
     });
 
     this.player.on('end', (data) => {
-      if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
+      if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
         return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
+      }
+
       this.emit(Events.PlayerEnd, this);
+
       if (data.reason === 'replaced') {
         this.isTrackPlaying = false;
         return this.emit(Events.PlayerEmpty, this);
@@ -149,9 +152,9 @@ export class DamonJsPlayer {
         this.isTrackPlaying = false;
         return this.emit(Events.PlayerEmpty, this);
       }
+
       return this.play();
     });
-
     this.player.on('closed', async (data: WebSocketClosedEvent) => {
       this.emit(Events.PlayerClosed, this, data);
     });
