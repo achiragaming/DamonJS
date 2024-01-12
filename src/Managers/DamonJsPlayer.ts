@@ -292,7 +292,8 @@ export class DamonJsPlayer {
     if (!options) options = { replaceCurrent: false };
 
     if (tracks) {
-      this.queue.splice(this.queue.currentId, options.replaceCurrent && this.queue.current ? 1 : 0, ...tracks);
+      this.queue.splice(this.queue.currentId + 1, options.replaceCurrent && this.queue.current ? 1 : 0, ...tracks);
+      return this.stopTrack();
     }
 
     if (this.playable) {
