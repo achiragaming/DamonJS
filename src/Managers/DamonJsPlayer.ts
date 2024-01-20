@@ -111,7 +111,7 @@ export class DamonJsPlayer {
     this.queue = new DamonJsQueue(this);
     this.data = new Map(options.data);
     this.textId = this.options.textId;
-    this.search = async (query, options) => await damonjs.search(query, options, this);
+    this.search = (query, searchOptions) => this.damonjs.search(query, searchOptions, this);
     this.isTrackPlaying = false;
   }
 

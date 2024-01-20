@@ -235,7 +235,7 @@ export class DamonJs extends EventEmitter {
       type: type ?? SearchResultTypes.Search,
     };
   }
-  /**Insprired from shoukaku */
+  
   private async joinVoiceChannel(options: VoiceChannelOptions): Promise<Player> {
     if (this.shoukaku.connections.has(options.guildId))
       throw new Error('This guild already have an existing connection');
