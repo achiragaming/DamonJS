@@ -25,6 +25,10 @@ import {
   WebSocketClosedEvent,
   Connector,
   LoadType,
+  VoiceChannelOptions,
+  Connection,
+  Player,
+  Constants,
 } from 'shoukaku';
 
 import { DamonJsPlayer } from './Managers/DamonJsPlayer';
@@ -60,9 +64,10 @@ export class DamonJs extends EventEmitter {
         plugin.load(this);
       }
     }
-
+    this.shoukaku.joinVoiceChannel = this.joinVoiceChannel;
     this.players = new Map<string, DamonJsPlayer>();
   }
+
   public on<K extends keyof DamonJsEvents>(event: K, listener: (...args: DamonJsEvents[K]) => void): this {
     super.on(event as string, (...args: any) => listener(...args));
     return this;
@@ -142,12 +147,10 @@ export class DamonJs extends EventEmitter {
    * @returns Promise<DamonJsSearchResult>
    */
   public async search(
-    player: DamonJsPlayer,
     query: string,
     options: DamonJsSearchOptions,
+    player?: DamonJsPlayer,
   ): Promise<DamonJsSearchResult> {
-    if (player.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
-
     const source = (SourceIDs as any)[
       (options?.engine && ['youtube', 'youtube_music', 'soundcloud'].includes(options.engine)
         ? options.engine
@@ -160,8 +163,11 @@ export class DamonJs extends EventEmitter {
     ];
 
     const isUrl = /^https?:\/\/.*/.test(query);
-
-    const result = await player.node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
+    const node = player ? player.node : await this.getLeastUsedNode().catch((_) => null);
+    if (!node) throw new DamonJsError(2, 'No nodes are online');
+    const result = player
+      ? await node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null)
+      : await node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
 
     if (result?.loadType === LoadType.TRACK) {
       return this.buildSearch(undefined, [new DamonJsTrack(result.data, options.requester)], SearchResultTypes.Track);
@@ -184,6 +190,33 @@ export class DamonJs extends EventEmitter {
     }
   }
 
+  /**
+   * Retrieves the least used node from the list of nodes.
+   * inspired from kazagumo
+   * @return {Promise<Node>} The least used node
+   */
+  public async getLeastUsedNode(): Promise<Node> {
+    const nodes: Node[] = [...this.shoukaku.nodes.values()];
+
+    const onlineNodes = nodes.filter((node) => node.state === State.CONNECTED);
+    // tslint:disable-next-line:no-console
+    console.log(nodes.map((x) => x.state));
+    if (!onlineNodes.length) throw new DamonJsError(2, 'No nodes are online');
+
+    const temp = await Promise.all(
+      onlineNodes.map(async (node) => ({
+        node,
+        players: (
+          await node.rest.getPlayers()
+        )
+          .filter((x) => this.players.get(x.guildId))
+          .map((x) => this.players.get(x.guildId)!)
+          .filter((x) => x.node.name === node.name).length,
+      })),
+    );
+
+    return temp.reduce((a, b) => (a.players < b.players ? a : b)).node;
+  }
   public buildSearch(
     playlistInfo?: {
       encoded: string;
@@ -201,5 +234,37 @@ export class DamonJs extends EventEmitter {
       tracks,
       type: type ?? SearchResultTypes.Search,
     };
+  }
+  /**Insprired from shoukaku */
+  private async joinVoiceChannel(options: VoiceChannelOptions): Promise<Player> {
+    if (this.shoukaku.connections.has(options.guildId))
+      throw new Error('This guild already have an existing connection');
+    const connection = new Connection(this.shoukaku, options);
+    this.shoukaku.connections.set(connection.guildId, connection);
+    try {
+      await connection.connect();
+    } catch (error) {
+      this.shoukaku.connections.delete(options.guildId);
+      throw error;
+    }
+    try {
+      const node = await this.getLeastUsedNode().catch((_) => null);
+      if (!node) throw new Error("Can't find any nodes to connect on");
+      const player = this.shoukaku.options.structures.player
+        ? new this.shoukaku.options.structures.player(connection.guildId, node)
+        : new Player(connection.guildId, node);
+      const onUpdate = (state: Constants.VoiceState) => {
+        if (state !== Constants.VoiceState.SESSION_READY) return;
+        player.sendServerUpdate(connection);
+      };
+      await player.sendServerUpdate(connection);
+      connection.on('connectionUpdate', onUpdate);
+      this.shoukaku.players.set(player.guildId, player);
+      return player;
+    } catch (error) {
+      connection.disconnect();
+      this.shoukaku.connections.delete(options.guildId);
+      throw error;
+    }
   }
 }
