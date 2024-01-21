@@ -64,7 +64,7 @@ export class DamonJs extends EventEmitter {
         plugin.load(this);
       }
     }
-    this.shoukaku.joinVoiceChannel = this.joinVoiceChannel;
+    this.shoukaku.joinVoiceChannel = this.joinVoiceChannel.bind(this);
     this.players = new Map<string, DamonJsPlayer>();
   }
 
@@ -198,9 +198,7 @@ export class DamonJs extends EventEmitter {
   public async getLeastUsedNode(): Promise<Node> {
     const nodes: Node[] = [...this.shoukaku.nodes.values()];
 
-    const onlineNodes = nodes.filter((node) => node.state === State.CONNECTED);
-    // tslint:disable-next-line:no-console
-    console.log(nodes.map((x) => x.state));
+    const onlineNodes = nodes.filter((node) => node.state === Constants.State.CONNECTED);
     if (!onlineNodes.length) throw new DamonJsError(2, 'No nodes are online');
 
     const temp = await Promise.all(
@@ -215,7 +213,7 @@ export class DamonJs extends EventEmitter {
       })),
     );
 
-    return temp.reduce((a, b) => (a.players < b.players ? a : b)).node;
+    return temp.reduce((a, b) => (a.players + a.node.penalties < b.players + b.node.penalties ? a : b)).node;
   }
   public buildSearch(
     playlistInfo?: {
@@ -235,7 +233,7 @@ export class DamonJs extends EventEmitter {
       type: type ?? SearchResultTypes.Search,
     };
   }
-  
+
   private async joinVoiceChannel(options: VoiceChannelOptions): Promise<Player> {
     if (this.shoukaku.connections.has(options.guildId))
       throw new Error('This guild already have an existing connection');
