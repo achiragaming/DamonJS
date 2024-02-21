@@ -169,15 +169,15 @@ export class DamonJs extends EventEmitter {
       ? await node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null)
       : await node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
 
-    if (result?.loadType === LoadType.TRACK) {
+    if (result?.loadType === LoadType.TRACK && result.data) {
       return this.buildSearch(undefined, [new DamonJsTrack(result.data, options.requester)], SearchResultTypes.Track);
-    } else if (result?.loadType === LoadType.PLAYLIST) {
+    } else if (result?.loadType === LoadType.PLAYLIST && result.data.tracks.length) {
       return this.buildSearch(
         result.data,
         result.data.tracks.map((track) => new DamonJsTrack(track, options.requester)),
         SearchResultTypes.Playlist,
       );
-    } else if (result?.loadType === LoadType.SEARCH) {
+    } else if (result?.loadType === LoadType.SEARCH && result.data.length) {
       return this.buildSearch(
         undefined,
         result.data.map((track) => new DamonJsTrack(track, options.requester)),

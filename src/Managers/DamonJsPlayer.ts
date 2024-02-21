@@ -149,7 +149,12 @@ export class DamonJsPlayer {
       if (!this.queue.current) {
         return this.emit(Events.PlayerEmpty, this);
       }
-      return this.play();
+      try {
+        return this.play();
+      } catch (error) {
+        return this.skip()
+      }
+     
     });
 
     this.player.on('closed', async (data: WebSocketClosedEvent) => {
