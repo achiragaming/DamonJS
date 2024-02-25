@@ -82,13 +82,13 @@ export class DamonJsPlayer {
 
   private initEventListeners() {
     const eventHandlers = {
-      start: () => {
+      start: async () => {
         if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
         this.isTrackPlaying = true;
         this.player.paused = false;
         this.emit(Events.PlayerStart, this, this.queue.current);
       },
-      end: (data: TrackEndEvent) => {
+      end: async (data: TrackEndEvent) => {
         if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
           return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
         }
@@ -97,7 +97,7 @@ export class DamonJsPlayer {
         if (data.reason === 'replaced') {
           return this.emit(Events.PlayerEmpty, this);
         }
-        this.handleTrackEnd(data);
+        await this.handleTrackEnd(data);
       },
       closed: async (data: WebSocketClosedEvent) => {
         this.emit(Events.PlayerClosed, this, data);
