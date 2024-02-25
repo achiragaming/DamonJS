@@ -159,7 +159,7 @@ export class DamonJsPlayer {
       try {
         await this.skip();
       } catch (error) {
-        await this.stopTrack().catch(this.handleStopError);
+        return this.emit(Events.PlayerEmpty, this);
       }
     }
     this.emit(Events.PlayerException, this, data);
@@ -180,7 +180,7 @@ export class DamonJsPlayer {
       try {
         await this.skip();
       } catch (error) {
-        await this.stopTrack().catch(this.handleStopError);
+        return this.emit(Events.PlayerEmpty, this);
       }
     }
     this.emit(Events.PlayerStuck, this, data);
@@ -194,16 +194,12 @@ export class DamonJsPlayer {
       try {
         await this.skip();
       } catch (error) {
-        await this.stopTrack().catch(this.handleStopError);
+        return this.emit(Events.PlayerEmpty, this);
       }
     }
     return this;
   }
 
-  private async handleStopError(error: Error) {
-    this.emit(Events.Debug, this, error.message);
-    return this;
-  }
   /**
    * Get GuildId
    */
