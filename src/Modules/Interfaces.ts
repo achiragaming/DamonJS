@@ -12,6 +12,16 @@ export interface DamonJsOptions {
   skipOnPlayError?: boolean;
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
+  /**Exception config until skip stops */
+  exceptions: {
+    max: number;
+    time: number;
+  };
+  /**Stuck config until skip stops */
+  stuck: {
+    max: number;
+    time: number;
+  };
   /** DamonJs plugins */
   plugins?: DamonJsPlugin[];
   /** Source that will be forced to resolve when playing it */
