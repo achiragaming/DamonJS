@@ -152,9 +152,8 @@ export class DamonJsPlayer {
       try {
         return this.play();
       } catch (error) {
-        return this.skip()
+        if (this.damonjs.DamonJsOptions.skipOnPlayError) return this.skip();
       }
-     
     });
 
     this.player.on('closed', async (data: WebSocketClosedEvent) => {
@@ -162,7 +161,7 @@ export class DamonJsPlayer {
     });
 
     this.player.on('exception', async (data: TrackExceptionEvent) => {
-      if (this.damonjs.DamonJsOptions.skipOnException) await this.stopTrack();
+      if (this.damonjs.DamonJsOptions.skipOnException) await this.skip();
       this.emit(Events.PlayerException, this, data);
     });
 
@@ -172,7 +171,7 @@ export class DamonJsPlayer {
       this.emit(Events.PlayerUpdate, this, this.queue.current, data);
     });
     this.player.on('stuck', async (data: TrackStuckEvent) => {
-      if (this.damonjs.DamonJsOptions.skipOnStuck) await this.stopTrack();
+      if (this.damonjs.DamonJsOptions.skipOnStuck) await this.skip();
       this.emit(Events.PlayerStuck, this, data);
     });
     this.player.on('resumed', async () => {

@@ -56,6 +56,7 @@ export class DamonJs extends EventEmitter {
 
     this.shoukaku = shoukaku;
     if (this.DamonJsOptions.skipOnException === undefined) this.DamonJsOptions.skipOnException = true;
+    if (this.DamonJsOptions.skipOnPlayError === undefined) this.DamonJsOptions.skipOnPlayError = true;
     if (this.DamonJsOptions.skipOnStuck === undefined) this.DamonJsOptions.skipOnStuck = true;
     if (this.DamonJsOptions.plugins) {
       for (const [, plugin] of this.DamonJsOptions.plugins.entries()) {

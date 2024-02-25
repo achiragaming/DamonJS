@@ -8,6 +8,8 @@ export interface DamonJsOptions {
   skipOnException?: boolean;
   /** Skip the track on stuck */
   skipOnStuck?: boolean;
+  /** Skip the track if cannot play */
+  skipOnPlayError?: boolean;
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
   /** DamonJs plugins */
