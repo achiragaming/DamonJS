@@ -141,7 +141,9 @@ export class DamonJsPlayer {
       return;
     }
 
-    await this.play().catch(this.handlePlayError);
+    await this.play().catch(async (e) => {
+      await this.handlePlayError(e);
+    });
     return this;
   }
 
