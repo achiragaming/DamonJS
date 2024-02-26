@@ -188,7 +188,6 @@ export class DamonJsPlayer {
   }
 
   private async handlePlayError(error: Error) {
-    this.emit(Events.Debug, this, error.message);
     const nowTime = Date.now();
     const playerErrors = this.errors.playerError;
     const maxTime = this.damonjs.DamonJsOptions.playerError.time;
@@ -205,6 +204,7 @@ export class DamonJsPlayer {
         return this.emit(Events.PlayerEmpty, this);
       }
     }
+    this.emit(Events.Debug, this, error.message);
     this.emit(Events.PlayerError, this, error);
     return this;
   }
