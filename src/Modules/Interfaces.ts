@@ -22,6 +22,10 @@ export interface DamonJsOptions {
     max: number;
     time: number;
   };
+  playerError: {
+    max: number;
+    time: number;
+  };
   /** DamonJs plugins */
   plugins?: DamonJsPlugin[];
   /** Source that will be forced to resolve when playing it */
@@ -123,6 +127,7 @@ export interface DamonJsEvents {
   playerResolveError: [player: DamonJsPlayer, track: DamonJsTrack, message?: string];
   playerMoved: [player: DamonJsPlayer, state: PlayerMovedState, channels: PlayerMovedChannels];
   initQueue: [player: DamonJsPlayer];
+  playerError: [player: DamonJsPlayer, error: Error];
   debug: [player: DamonJsPlayer, message: string];
 }
 export enum Events {
@@ -136,6 +141,7 @@ export enum Events {
   PlayerException = 'playerException',
   PlayerResumed = 'playerResumed',
   PlayerStuck = 'playerStuck',
+  PlayerError = 'playerError',
   PlayerResolveError = 'playerResolveError',
   PlayerMoved = 'playerMoved',
   Debug = 'debug',

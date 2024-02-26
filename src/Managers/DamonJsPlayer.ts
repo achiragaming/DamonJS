@@ -50,7 +50,7 @@ export class DamonJsPlayer {
   public loop: LoopState = LoopState.None;
   public readonly data: Map<string, any>;
   public search: (query: string, options: DamonJsSearchOptions) => Promise<DamonJsSearchResult>;
-  public readonly errors: { exceptions: number[]; stuck: number[] };
+  public readonly errors: { exceptions: number[]; stuck: number[]; playerError: number[] };
 
   constructor(
     damonjs: DamonJs,
@@ -67,7 +67,7 @@ export class DamonJsPlayer {
     this.queue = new DamonJsQueue(this);
     this.data = new Map(options.data);
     this.textId = this.options.textId;
-    this.errors = { exceptions: [], stuck: [] };
+    this.errors = { exceptions: [], stuck: [], playerError: [] };
     this.search = (query, searchOptions) => this.damonjs.search(query, searchOptions, this);
     this.isTrackPlaying = false;
   }
@@ -189,7 +189,15 @@ export class DamonJsPlayer {
 
   private async handlePlayError(error: Error) {
     this.emit(Events.Debug, this, error.message);
-
+    const nowTime = Date.now();
+    const playerErrors = this.errors.playerError;
+    const maxTime = this.damonjs.DamonJsOptions.playerError.time;
+    const errors = playerErrors.filter((time: number) => nowTime - time < maxTime);
+    if (errors.length > this.damonjs.DamonJsOptions.playerError.max) return;
+    else {
+      errors.push(nowTime);
+      this.errors.playerError = errors;
+    }
     if (this.damonjs.DamonJsOptions.skipOnPlayError) {
       try {
         await this.skip();
@@ -197,6 +205,7 @@ export class DamonJsPlayer {
         return this.emit(Events.PlayerEmpty, this);
       }
     }
+    this.emit(Events.PlayerError, this, error);
     return this;
   }
 
