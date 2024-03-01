@@ -129,7 +129,7 @@ export class DamonJsPlayer {
     if (data.reason === 'replaced') {
       return this.emit(Events.PlayerEmpty, this);
     }
-    await this.skip();
+    await this.skip().catch(() => {});
   }
 
   private async handleTrackException(data: TrackExceptionEvent) {
@@ -146,9 +146,7 @@ export class DamonJsPlayer {
     }
 
     if (this.damonjs.DamonJsOptions.skipOnException) {
-      try {
-        await this.skip();
-      } catch (error) {}
+      await this.skip().catch(() => {});
     }
     this.emit(Events.PlayerException, this, data);
     return this;
@@ -166,11 +164,9 @@ export class DamonJsPlayer {
       stucks.push(nowTime);
       this.errors.stuck = stucks;
     }
-    
+
     if (this.damonjs.DamonJsOptions.skipOnStuck) {
-      try {
-        await this.skip();
-      } catch (error) {}
+      await this.skip().catch(() => {});
     }
     this.emit(Events.PlayerStuck, this, data);
     return this;
