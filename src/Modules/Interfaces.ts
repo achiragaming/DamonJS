@@ -20,6 +20,7 @@ export interface DamonJsOptions {
     max: number;
     time: number;
   };
+  playerEmpty: { max: number; time: number };
   /** DamonJs plugins */
   plugins?: DamonJsPlugin[];
   /** Source that will be forced to resolve when playing it */

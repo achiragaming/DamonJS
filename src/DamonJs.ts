@@ -34,7 +34,6 @@ import {
 import { DamonJsPlayer } from './Managers/DamonJsPlayer';
 import { DamonJsTrack } from './Managers/Supports/DamonJsTrack';
 import { Snowflake } from 'discord.js';
-import { exit } from 'process';
 
 // Add other methods related to your base class
 

@@ -50,7 +50,7 @@ export class DamonJsPlayer {
   public loop: LoopState = LoopState.None;
   public readonly data: Map<string, any>;
   public search: (query: string, options: DamonJsSearchOptions) => Promise<DamonJsSearchResult>;
-  public readonly errors: { exceptions: number[]; stuck: number[]; playerError: number[] };
+  public readonly errors: { exceptions: number[]; stuck: number[]; playerEmpty: number[] };
 
   constructor(
     damonjs: DamonJs,
@@ -67,7 +67,7 @@ export class DamonJsPlayer {
     this.queue = new DamonJsQueue(this);
     this.data = new Map(options.data);
     this.textId = this.options.textId;
-    this.errors = { exceptions: [], stuck: [], playerError: [] };
+    this.errors = { exceptions: [], stuck: [], playerEmpty: [] };
     this.search = (query, searchOptions) => this.damonjs.search(query, searchOptions, this);
     this.isTrackPlaying = false;
   }
@@ -92,7 +92,6 @@ export class DamonJsPlayer {
         if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
           return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
         }
-
         await this.handleTrackEnd(data);
       },
       closed: async (data: WebSocketClosedEvent) => {
@@ -127,9 +126,8 @@ export class DamonJsPlayer {
     this.isTrackPlaying = false;
     this.emit(Events.PlayerEnd, this);
     if (data.reason === 'replaced') {
-      return this.emit(Events.PlayerEmpty, this);
-    }
-    await this.skip().catch(() => null);
+      await this.handlePlayerEmpty();
+    } else await this.skip().catch(() => null);
   }
 
   private async handleTrackException(data: TrackExceptionEvent) {
@@ -171,7 +169,22 @@ export class DamonJsPlayer {
     this.emit(Events.PlayerStuck, this, data);
     return this;
   }
+  private async handlePlayerEmpty() {
+    this.isTrackPlaying = false;
 
+    const nowTime = Date.now();
+    const emptyErr = this.errors.playerEmpty;
+    const maxTime = this.damonjs.DamonJsOptions.playerEmpty.time;
+    const emptys = emptyErr.filter((time: number) => nowTime - time < maxTime);
+    if (emptys.length > this.damonjs.DamonJsOptions.playerEmpty.max) return;
+    else {
+      emptys.push(nowTime);
+      this.errors.playerEmpty = emptys;
+    }
+
+    this.emit(Events.PlayerEmpty, this);
+    return this;
+  }
   /**
    * Get GuildId
    */
@@ -382,7 +395,7 @@ export class DamonJsPlayer {
     try {
       await this.play();
     } catch (e) {
-      this.emit(Events.PlayerEmpty, this);
+      await this.handlePlayerEmpty();
     }
 
     return this;
