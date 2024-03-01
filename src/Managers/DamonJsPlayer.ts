@@ -351,25 +351,39 @@ export class DamonJsPlayer {
   }
 
   /**
-   * Skip to a specifc track
-   * @param trackId Id of the Track
-   * @returns Promise<DamonJsPlayer>
+   * Skips to the specified track in the queue.
+   * If the player is in a destroyed state, it will throw an error.
+   * If the player is currently looping the track or queue, it will continue to do so.
+   * If the provided track ID exists in the queue, it will skip to that track.
+   * If the provided track ID is greater than the queue length, it will skip to the last track.
+   * If the provided track ID is out of bounds, it will skip to the previous track.
+   *
+   * @param trackId - The ID of the track to skip to.
+   * @returns A Promise that resolves to the DamonJsPlayer instance.
+   * @throws {DamonJsError} If the player is already destroyed.
    */
   public async skipto(trackId: number): Promise<DamonJsPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+    if (this.state === PlayerState.DESTROYED) {
+      throw new DamonJsError(1, 'Player is already destroyed');
+    }
+
     if (this.loop === LoopState.Track) {
       this.queue.currentId = this.queue.currentId;
     } else if (this.loop === LoopState.Queue && this.queue.isEnd) {
       this.queue.currentId = 0;
     } else if (this.queue[trackId]) {
       this.queue.currentId = trackId;
-    } else {
+    } else if (this.queue.length <= trackId) {
       this.queue.currentId = this.queue.length;
+    } else {
+      this.queue.currentId = this.queue.length - 1;
     }
 
-    await this.play().catch(async (e) => {
+    try {
+      await this.play();
+    } catch (e) {
       this.emit(Events.PlayerEmpty, this);
-    });
+    }
 
     return this;
   }
