@@ -161,7 +161,7 @@ export class DamonJsTrack {
       (await this.getTrack(
         options.player ?? null,
         (SourceIDs as any)[this.damonjs.DamonJsOptions.defaultSearchEngine || 'youtube'] || 'yt',
-      ).catch(() => {})) || (await this.getTrack(options.player ?? null, 'youtube').catch(() => {}));
+      ).catch(() => null)) || (await this.getTrack(options.player ?? null, 'youtube').catch(() => null));
     if (!result) throw new DamonJsError(2, 'No results found');
 
     this.encoded = result.encoded;

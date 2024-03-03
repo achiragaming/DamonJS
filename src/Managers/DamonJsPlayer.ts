@@ -183,7 +183,7 @@ export class DamonJsPlayer {
     if (this.damonjs.DamonJsOptions.skipResolveError) {
       await this.skip().catch(() => null);
     }
-    
+
     this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
     return this;
   }
@@ -409,9 +409,7 @@ export class DamonJsPlayer {
       this.queue.currentId = this.queue.length - 1;
     }
 
-    try {
-      await this.play();
-    } catch (e) {}
+    await this.play().catch((e: Error) => e);
 
     return this;
   }
