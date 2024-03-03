@@ -157,7 +157,11 @@ export class DamonJsTrack {
       `Resolving ${this.sourceName} track ${this.title}; Source: ${this.sourceName}`,
     );
 
-    const result = await this.getTrack(options.player ?? null);
+    const result =
+      (await this.getTrack(
+        options.player ?? null,
+        (SourceIDs as any)[this.damonjs.DamonJsOptions.defaultSearchEngine || 'youtube'] || 'yt',
+      ).catch(() => {})) || (await this.getTrack(options.player ?? null, 'youtube').catch(() => {}));
     if (!result) throw new DamonJsError(2, 'No results found');
 
     this.encoded = result.encoded;
@@ -175,10 +179,8 @@ export class DamonJsTrack {
     }
     return this;
   }
-  private async getTrack(player: DamonJsPlayer): Promise<Track> {
+  private async getTrack(player: DamonJsPlayer, source: any): Promise<Track> {
     if (!this.damonjs) throw new DamonJsError(1, 'DamonJs is not set');
-    const defaultSearchEngine = this.damonjs.DamonJsOptions.defaultSearchEngine;
-    const source = (SourceIDs as any)[defaultSearchEngine || 'youtube'] || 'yt';
     const query = [this.author, this.title].filter((x) => !!x).join(' - ');
     const result = await player.search(`${query}`, { requester: this.requester, engine: source });
     if (!result || !result.tracks.length) throw new DamonJsError(2, 'No results found');

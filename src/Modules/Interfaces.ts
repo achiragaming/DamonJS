@@ -8,6 +8,8 @@ export interface DamonJsOptions {
   skipOnException?: boolean;
   /** Skip the track on stuck */
   skipOnStuck?: boolean;
+  /** Skip the track on stuck */
+  skipResolveError?: boolean;
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
   /** Exception config until skip stops */
@@ -20,7 +22,10 @@ export interface DamonJsOptions {
     max: number;
     time: number;
   };
-  playerEmpty: { max: number; time: number };
+  resolveError: {
+    max: number;
+    time: number;
+  };
   /** DamonJs plugins */
   plugins?: DamonJsPlugin[];
   /** Source that will be forced to resolve when playing it */

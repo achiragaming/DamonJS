@@ -50,7 +50,7 @@ export class DamonJsPlayer {
   public loop: LoopState = LoopState.None;
   public readonly data: Map<string, any>;
   public search: (query: string, options: DamonJsSearchOptions) => Promise<DamonJsSearchResult>;
-  public readonly errors: { exceptions: number[]; stuck: number[]; playerEmpty: number[] };
+  public readonly errors: { exceptions: number[]; stuck: number[]; resolveError: number[] };
 
   constructor(
     damonjs: DamonJs,
@@ -67,7 +67,7 @@ export class DamonJsPlayer {
     this.queue = new DamonJsQueue(this);
     this.data = new Map(options.data);
     this.textId = this.options.textId;
-    this.errors = { exceptions: [], stuck: [], playerEmpty: [] };
+    this.errors = { exceptions: [], stuck: [], resolveError: [] };
     this.search = (query, searchOptions) => this.damonjs.search(query, searchOptions, this);
     this.isTrackPlaying = false;
   }
@@ -125,9 +125,7 @@ export class DamonJsPlayer {
   private async handleTrackEnd(data: TrackEndEvent) {
     this.isTrackPlaying = false;
     this.emit(Events.PlayerEnd, this);
-    if (data.reason === 'replaced') {
-      await this.handlePlayerEmpty();
-    } else await this.skip().catch(() => null);
+    await this.skip().catch(() => null);
   }
 
   private async handleTrackException(data: TrackExceptionEvent) {
@@ -169,22 +167,33 @@ export class DamonJsPlayer {
     this.emit(Events.PlayerStuck, this, data);
     return this;
   }
-  private async handlePlayerEmpty() {
+  private async handleResolveError(current: DamonJsTrack, resolveResult: Error) {
     this.isTrackPlaying = false;
 
     const nowTime = Date.now();
-    const emptyErr = this.errors.playerEmpty;
-    const maxTime = this.damonjs.DamonJsOptions.playerEmpty.time;
-    const emptys = emptyErr.filter((time: number) => nowTime - time < maxTime);
-    if (emptys.length > this.damonjs.DamonJsOptions.playerEmpty.max) return;
+    const resolveErr = this.errors.resolveError;
+    const maxTime = this.damonjs.DamonJsOptions.resolveError.time;
+    const rErrors = resolveErr.filter((time: number) => nowTime - time < maxTime);
+    if (rErrors.length > this.damonjs.DamonJsOptions.resolveError.max) return;
     else {
-      emptys.push(nowTime);
-      this.errors.playerEmpty = emptys;
+      rErrors.push(nowTime);
+      this.errors.resolveError = rErrors;
     }
 
+    if (this.damonjs.DamonJsOptions.skipResolveError) {
+      await this.skip().catch(() => null);
+    }
+    
+    this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
+    return this;
+  }
+
+  private async handlePlayerEmpty() {
+    this.isTrackPlaying = false;
     this.emit(Events.PlayerEmpty, this);
     return this;
   }
+
   /**
    * Get GuildId
    */
@@ -308,20 +317,28 @@ export class DamonJsPlayer {
       this.queue.currentId--;
       await this.player.stopTrack();
     } else {
-      if (!this.queue.current) throw new DamonJsError(1, 'No track is available to play');
+      if (!this.queue.current) {
+        await this.handlePlayerEmpty();
+        throw new DamonJsError(1, 'No track is available to play');
+      }
       const current = this.queue.current;
       current.setDamonJs(this.damonjs);
 
       const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
 
       if (resolveResult instanceof Error) {
-        this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
+        await this.handleResolveError(current, resolveResult);
+
         throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${resolveResult.message}`);
       }
       const playOptions = { track: current.encoded, options: {} };
       if (options) playOptions.options = { ...options, noReplace: false };
       else playOptions.options = { noReplace: false };
-      await this.player.playTrack(playOptions);
+      const playerResult = await this.player.playTrack(playOptions).catch((e: Error) => e);
+      if (playerResult instanceof Error) {
+        await this.handleResolveError(current, playerResult);
+        throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${playerResult.message}`);
+      }
     }
     return this;
   }
@@ -394,9 +411,7 @@ export class DamonJsPlayer {
 
     try {
       await this.play();
-    } catch (e) {
-      await this.handlePlayerEmpty();
-    }
+    } catch (e) {}
 
     return this;
   }
