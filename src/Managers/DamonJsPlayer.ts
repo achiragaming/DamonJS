@@ -168,8 +168,6 @@ export class DamonJsPlayer {
     return this;
   }
   private async handleResolveError(current: DamonJsTrack, resolveResult: Error) {
-    this.isTrackPlaying = false;
-
     const nowTime = Date.now();
     const resolveErr = this.errors.resolveError;
     const maxTime = this.damonjs.DamonJsOptions.resolveError.time;
@@ -189,7 +187,6 @@ export class DamonJsPlayer {
   }
 
   private async handlePlayerEmpty() {
-    this.isTrackPlaying = false;
     this.emit(Events.PlayerEmpty, this);
     return this;
   }
