@@ -17,7 +17,23 @@ const client = new Client({ intents: [Guilds, GuildVoiceStates, GuildMessages, M
 
 const damonjs = new DamonJs(
   {
+    resolveError: {
+      max: 5,
+      time: 30 * 1000,
+    },
+    exceptions: {
+      max: 5,
+      time: 30 * 1000,
+    },
+    stuck: {
+      max: 5,
+      time: 30 * 1000,
+    },
+    skipResolveError: true,
+    skipOnException: true,
+    skipOnStuck: true,
     defaultSearchEngine: 'youtube',
+
     plugins: [new Plugins.PlayerMoved(client)],
   },
   new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
