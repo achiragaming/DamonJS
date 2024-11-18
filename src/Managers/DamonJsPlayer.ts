@@ -135,7 +135,7 @@ export class DamonJsPlayer {
     const exceptionArr = this.errors.exceptions;
     const maxTime = this.damonjs.DamonJsOptions.exceptions.time;
     const exceptions = exceptionArr.filter((time: number) => nowTime - time < maxTime);
-    if (!(exceptions.length >= this.damonjs.DamonJsOptions.exceptions.max)) {
+    if (exceptions.length < this.damonjs.DamonJsOptions.exceptions.max) {
       this.emit(Events.PlayerException, this, data);
       exceptions.push(nowTime);
       this.errors.exceptions = exceptions;
@@ -152,21 +152,26 @@ export class DamonJsPlayer {
     const stuckErr = this.errors.stuck;
     const maxTime = this.damonjs.DamonJsOptions.stuck.time;
     const stucks = stuckErr.filter((time: number) => nowTime - time < maxTime);
-    if (!(stucks.length >= this.damonjs.DamonJsOptions.stuck.max)) {
+
+    // Only emit event and skip if below max threshold
+    if (stucks.length < this.damonjs.DamonJsOptions.stuck.max) {
       this.emit(Events.PlayerStuck, this, data);
       stucks.push(nowTime);
       this.errors.stuck = stucks;
+
       if (this.damonjs.DamonJsOptions.skipOnStuck) {
         await this.skip().catch(() => null);
       }
     }
   }
   private async handleResolveError(current: DamonJsTrack, resolveResult: Error) {
+    this.isTrackPlaying = false;
+
     const nowTime = Date.now();
     const resolveErr = this.errors.resolveError;
     const maxTime = this.damonjs.DamonJsOptions.resolveError.time;
     const rErrors = resolveErr.filter((time: number) => nowTime - time < maxTime);
-    if (!(rErrors.length >= this.damonjs.DamonJsOptions.resolveError.max)) {
+    if (rErrors.length < this.damonjs.DamonJsOptions.resolveError.max) {
       this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
       rErrors.push(nowTime);
       this.errors.resolveError = rErrors;
@@ -177,6 +182,8 @@ export class DamonJsPlayer {
   }
 
   private async handlePlayerEmpty() {
+    this.isTrackPlaying = false;
+
     this.emit(Events.PlayerEmpty, this);
     return this;
   }
