@@ -33,7 +33,7 @@ jobs:
         run: npm run build
 
       - name: Archive project folder
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: dist-folder
           path: ./dist
