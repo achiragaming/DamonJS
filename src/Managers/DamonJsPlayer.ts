@@ -133,10 +133,12 @@ export class DamonJsPlayer {
     this.player.on('resumed', eventHandlers.resumed);
   }
   private async handleTrackStart() {
-    if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
-    this.isTrackPlaying = true;
-    this.player.paused = false;
-    this.emit(Events.PlayerStart, this, this.queue.current);
+    return await this.withLock('trackStart', async () => {
+      if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
+      this.isTrackPlaying = true;
+      this.player.paused = false;
+      this.emit(Events.PlayerStart, this, this.queue.current);
+    });
   }
   private async handleTrackEnd(data: TrackEndEvent) {
     return await this.withLock('trackEnd', async () => {
@@ -226,7 +228,9 @@ export class DamonJsPlayer {
   }
 
   private async handleTrackClosed(data: WebSocketClosedEvent) {
-    this.emit(Events.PlayerClosed, this, data);
+    return await this.withLock('trackClosed', async () => {
+      this.emit(Events.PlayerClosed, this, data);
+    });
   }
   /**
    * Get GuildId
