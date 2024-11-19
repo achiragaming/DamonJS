@@ -74,7 +74,9 @@ export class DamonJs extends EventEmitter {
 
     this.exceptions = this.DamonJsOptions.exceptions ? this.DamonJsOptions.exceptions : { max: 3, time: 30 * 1000 };
     this.stuck = this.DamonJsOptions.stuck ? this.DamonJsOptions.stuck : { max: 3, time: 30 * 1000 };
-    this.trackEndSpam = this.DamonJsOptions.trackEndSpam ?this.DamonJsOptions.trackEndSpam : { max: 3, time: 30 * 1000 };
+    this.trackEndSpam = this.DamonJsOptions.trackEndSpam
+      ? this.DamonJsOptions.trackEndSpam
+      : { max: 3, time: 30 * 1000 };
     this.resolveError = this.DamonJsOptions.resolveError
       ? this.DamonJsOptions.resolveError
       : { max: 3, time: 30 * 1000 };

@@ -380,8 +380,7 @@ export class DamonJsPlayer {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
 
     if (!tracks && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
-
-    if (!options) options = { replaceCurrent: false };
+    if (!options || typeof options.replaceCurrent !== 'boolean') options = { ...options, replaceCurrent: false };
 
     if (tracks) {
       this.queue.splice(this.queue.currentId + 1, options.replaceCurrent && this.queue.current ? 1 : 0, ...tracks);
@@ -403,9 +402,9 @@ export class DamonJsPlayer {
         await this.handleResolveError(current, resolveResult);
         throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${resolveResult.message}`);
       }
-      const playOptions = { track: current.encoded, options: {} };
-      if (options) playOptions.options = { ...options, noReplace: false };
-      else playOptions.options = { noReplace: false };
+      let playOptions = { track: { encoded: current.encoded, userData: current.requester ?? {} } };
+      if (options) playOptions = { ...playOptions, ...options };
+
       const playerResult = await this.player.playTrack(playOptions).catch((e: Error) => e);
       if (playerResult instanceof Error) {
         await this.handleResolveError(current, playerResult);

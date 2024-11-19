@@ -1,8 +1,9 @@
 import { DamonJs } from '../DamonJs';
-import { DamonJsPlayer } from '../Index';
+import { DamonJsPlayer, DamonJsQueue } from '../Index';
 import { DamonJsTrack } from '../Managers/Supports/DamonJsTrack';
 import {
   PlayerUpdate,
+  Track,
   TrackEndEvent,
   TrackExceptionEvent,
   TrackStuckEvent,
@@ -73,6 +74,9 @@ export interface DamonJsPlayerOptions {
   textId: Snowflake;
   volume: number;
   data?: [string, any][];
+  extends?: {
+    queue?: Utils.Constructor<DamonJsQueue>;
+  };
 }
 
 export interface ResolveOptions {
@@ -117,6 +121,7 @@ export interface RawTrack {
     sourceName: string;
   };
   pluginInfo: unknown;
+  _raw: Track;
 }
 
 export interface DamonJsEvents {
@@ -212,7 +217,6 @@ export const SupportedSources = [
 ];
 
 export interface PlayOptions {
-  noReplace?: boolean;
   pause?: boolean;
   startTime?: number;
   endTime?: number;

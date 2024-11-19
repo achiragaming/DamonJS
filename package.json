@@ -1,6 +1,6 @@
 {
   "name": "damonjs",
-  "version": "1.8.5",
+  "version": "1.8.6",
   "preview": false,
   "description": "A modified Shoukaku wrapper with enhanced queue support.",
   "main": "dist/Index.js",
@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "events": "^3.3.0",
-    "shoukaku": "^4.0.1"
+    "shoukaku": "^4.1.1"
   },
   "repository": {
     "type": "git",

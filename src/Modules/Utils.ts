@@ -3,7 +3,7 @@ import { DamonJsTrack } from '../Managers/Supports/DamonJsTrack';
 
 export class DamonJsUtils {
   static convertDamonJsTrackToTrack(track: DamonJsTrack): Track {
-    const { encoded, info, pluginInfo } = track.getRaw();
+    const { encoded: encoded, info, pluginInfo } = track.getRaw();
     return {
       encoded,
       info: {

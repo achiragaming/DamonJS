@@ -52,7 +52,7 @@ export class DamonJsTrack {
   public isrc: string | undefined;
   public resolvedBySource: boolean = false;
   public readonly data: Map<string, any>;
-  constructor(raw: RawTrack, requester: unknown) {
+  constructor(private readonly raw: Track, requester: unknown) {
     this.damonjs = undefined;
     this.data = new Map();
     this.encoded = raw.encoded;
@@ -93,6 +93,7 @@ export class DamonJsTrack {
         sourceName: this.sourceName,
       },
       pluginInfo: this.pluginInfo,
+      _raw: this.raw,
     };
   }
 
