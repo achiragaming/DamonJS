@@ -40,7 +40,7 @@ import { Snowflake } from 'discord.js';
 export class DamonJsPlayer {
   private options: DamonJsPlayerOptions;
   public textId: Snowflake;
-  private lockMap: Map<string, boolean> = new Map();
+  private lockMap: Map<string, Promise<any>> = new Map();
   private readonly damonjs: DamonJs;
   public player: Player;
   private isTrackPlaying: boolean;
@@ -82,16 +82,25 @@ export class DamonJsPlayer {
     this.search = (query, searchOptions) => this.damonjs.search(query, searchOptions, this);
     this.isTrackPlaying = false;
   }
-  private async withLock<T>(key: string, operation: () => Promise<T>): Promise<T | undefined> {
-    const lockKey = `${this.guildId}:${key}`;
-    if (this.lockMap.get(lockKey)) return;
+  private async lockAction<T>(key: string, operation: () => Promise<T>): Promise<T> {
+    const existingLock = Array.from(this.lockMap.keys()).find((existingKey) => key.startsWith(existingKey));
 
-    this.lockMap.set(lockKey, true);
-    try {
-      return await operation();
-    } finally {
-      this.lockMap.delete(lockKey);
+    if (existingLock) {
+      await this.lockMap.get(existingLock);
     }
+
+    const lockPromise = (async () => {
+      try {
+        const result = await operation();
+        return result;
+      } finally {
+        this.lockMap.delete(key);
+      }
+    })();
+
+    this.lockMap.set(key, lockPromise);
+
+    return await lockPromise;
   }
   public async init() {
     if (this.state === PlayerState.CONNECTED)
@@ -135,7 +144,7 @@ export class DamonJsPlayer {
     this.player.on('resumed', eventHandlers.resumed);
   }
   private async handleTrackStart() {
-    return await this.withLock('trackStart', async () => {
+    return await this.lockAction('trackStart', async () => {
       if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
       this.isTrackPlaying = true;
       this.player.paused = false;
@@ -143,7 +152,7 @@ export class DamonJsPlayer {
     });
   }
   private async handleTrackEnd(data: TrackEndEvent) {
-    return await this.withLock('trackEnd', async () => {
+    return await this.lockAction('trackEnd', async () => {
       if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
         return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
@@ -166,26 +175,26 @@ export class DamonJsPlayer {
     });
   }
   private async handlePlayerEmpty() {
-    return await this.withLock('playerEmpty', async () => {
+    return await this.lockAction('playerEmpty', async () => {
       this.isTrackPlaying = false;
       this.emit(Events.PlayerEmpty, this, this.queue.lastTrack);
       return this;
     });
   }
   private async handleTrackResumed() {
-    return await this.withLock('trackResumed', async () => {
+    return await this.lockAction('trackResumed', async () => {
       this.emit(Events.PlayerResumed, this);
     });
   }
   private async handleTrackUpdate(data: PlayerUpdate) {
-    return await this.withLock('trackUpdate', async () => {
+    return await this.lockAction('trackUpdate', async () => {
       if (!this.queue.current) return this.emit(Events.Debug, this, `No Track to Update ${this.guildId}`);
       this.queue.current.position = data.state.position || 0;
       this.emit(Events.PlayerUpdate, this, this.queue.current, data);
     });
   }
   private async handleTrackException(data: TrackExceptionEvent) {
-    return await this.withLock('trackException', async () => {
+    return await this.lockAction('trackException', async () => {
       const now = Date.now();
 
       const maxTime = this.damonjs.exceptions.time;
@@ -204,7 +213,7 @@ export class DamonJsPlayer {
   }
 
   private async handleTrackStuck(data: TrackStuckEvent) {
-    return await this.withLock('trackStuck', async () => {
+    return await this.lockAction('trackStuck', async () => {
       const now = Date.now();
 
       const maxTime = this.damonjs.stuck.time;
@@ -223,7 +232,7 @@ export class DamonJsPlayer {
   }
 
   private async handleResolveError(current: DamonJsTrack, resolveResult: Error) {
-    return await this.withLock('trackResolveError', async () => {
+    return await this.lockAction('trackResolveError', async () => {
       const now = Date.now();
 
       const maxTime = this.damonjs.resolveError.time;
@@ -242,8 +251,21 @@ export class DamonJsPlayer {
   }
 
   private async handleTrackClosed(data: WebSocketClosedEvent) {
-    return await this.withLock('trackClosed', async () => {
+    return await this.lockAction('trackClosed', async () => {
       this.emit(Events.PlayerClosed, this, data);
+    });
+  }
+  private async handlePlayerDestroy() {
+    return await this.lockAction('playerDestroy', async () => {
+      if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
+        throw new DamonJsError(1, 'Player is already destroyed');
+      this.state = PlayerState.DESTROYING;
+      await this.shoukaku.leaveVoiceChannel(this.guildId);
+      this.damonjs.players.delete(this.guildId);
+      this.state = PlayerState.DESTROYED;
+      this.emit(Events.PlayerDestroy, this, this.queue.current);
+      this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
+      return this;
     });
   }
   /**
@@ -708,15 +730,7 @@ export class DamonJsPlayer {
    * @returns Promise<DamonJsPlayer>
    */
   async destroy(): Promise<DamonJsPlayer> {
-    if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED)
-      throw new DamonJsError(1, 'Player is already destroyed');
-    this.state = PlayerState.DESTROYING;
-    await this.shoukaku.leaveVoiceChannel(this.guildId);
-    this.damonjs.players.delete(this.guildId);
-    this.state = PlayerState.DESTROYED;
-    this.emit(Events.PlayerDestroy, this);
-    this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
-    return this;
+    return await this.handlePlayerDestroy();
   }
   public emit<K extends keyof DamonJsEvents>(event: K, ...args: DamonJsEvents[K]): void {
     this.damonjs.emit(event, ...args);

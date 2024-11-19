@@ -1,7 +1,14 @@
 import { DamonJs } from '../DamonJs';
 import { DamonJsPlayer } from '../Index';
 import { DamonJsTrack } from '../Managers/Supports/DamonJsTrack';
-import { PlayerUpdate, TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, Utils, WebSocketClosedEvent } from 'shoukaku';
+import {
+  PlayerUpdate,
+  TrackEndEvent,
+  TrackExceptionEvent,
+  TrackStuckEvent,
+  Utils,
+  WebSocketClosedEvent,
+} from 'shoukaku';
 import { Snowflake } from 'discord.js';
 export interface DamonJsOptions {
   /** Default search engine if no engine was provided. Default to youtube */
@@ -113,10 +120,10 @@ export interface RawTrack {
 }
 
 export interface DamonJsEvents {
-  playerDestroy: [player: DamonJsPlayer];
+  playerDestroy: [player: DamonJsPlayer, track?: DamonJsTrack];
   playerCreate: [player: DamonJsPlayer];
   playerStart: [player: DamonJsPlayer, track: DamonJsTrack];
-  playerEnd: [player: DamonJsPlayer, track: DamonJsTrack,data:TrackEndEvent];
+  playerEnd: [player: DamonJsPlayer, track: DamonJsTrack, data: TrackEndEvent];
   playerEmpty: [player: DamonJsPlayer, track?: DamonJsTrack];
   playerClosed: [player: DamonJsPlayer, data: WebSocketClosedEvent];
   playerUpdate: [player: DamonJsPlayer, track: DamonJsTrack, data: PlayerUpdate];
