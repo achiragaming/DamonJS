@@ -111,8 +111,8 @@ export interface DamonJsEvents {
   playerDestroy: [player: DamonJsPlayer];
   playerCreate: [player: DamonJsPlayer];
   playerStart: [player: DamonJsPlayer, track: DamonJsTrack];
-  playerEnd: [player: DamonJsPlayer];
-  playerEmpty: [player: DamonJsPlayer];
+  playerEnd: [player: DamonJsPlayer, track: DamonJsTrack];
+  playerEmpty: [player: DamonJsPlayer, track?: DamonJsTrack];
   playerClosed: [player: DamonJsPlayer, data: WebSocketClosedEvent];
   playerUpdate: [player: DamonJsPlayer, track: DamonJsTrack, data: PlayerUpdate];
   playerException: [player: DamonJsPlayer, data: TrackExceptionEvent];

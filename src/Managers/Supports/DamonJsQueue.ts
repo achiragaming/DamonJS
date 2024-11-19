@@ -41,6 +41,9 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
   public get current(): DamonJsTrack | undefined {
     return this.at(this.currentId);
   }
+  public get lastTrack(): DamonJsTrack | undefined {
+    return this.at(this.length - 1);
+  }
   /**
    * Add track(s) to the queue
    * @param track DamonJsTrack to add

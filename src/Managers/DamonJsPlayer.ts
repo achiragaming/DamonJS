@@ -40,6 +40,7 @@ import { Snowflake } from 'discord.js';
 export class DamonJsPlayer {
   private options: DamonJsPlayerOptions;
   public textId: Snowflake;
+  private lockMap: Map<string, boolean> = new Map();
   private readonly damonjs: DamonJs;
   public player: Player;
   private isTrackPlaying: boolean;
@@ -79,7 +80,17 @@ export class DamonJsPlayer {
     this.search = (query, searchOptions) => this.damonjs.search(query, searchOptions, this);
     this.isTrackPlaying = false;
   }
+  private async withLock<T>(key: string, operation: () => Promise<T>): Promise<T | undefined> {
+    const lockKey = `${this.guildId}:${key}`;
+    if (this.lockMap.get(lockKey)) return;
 
+    this.lockMap.set(lockKey, true);
+    try {
+      return await operation();
+    } finally {
+      this.lockMap.delete(lockKey);
+    }
+  }
   public async init() {
     if (this.state === PlayerState.CONNECTED)
       throw new DamonJsError(1, 'Player is already initialized or initializing');
@@ -91,33 +102,25 @@ export class DamonJsPlayer {
   private initEventListeners() {
     const eventHandlers = {
       start: async () => {
-        if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
-        this.isTrackPlaying = true;
-        this.player.paused = false;
-        this.emit(Events.PlayerStart, this, this.queue.current);
+        await this.handleTrackStart();
       },
       end: async (data: TrackEndEvent) => {
-        if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
-          return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
-        }
         await this.handleTrackEnd(data);
       },
       closed: async (data: WebSocketClosedEvent) => {
-        this.emit(Events.PlayerClosed, this, data);
+        await this.handleTrackClosed(data);
       },
       exception: async (data: TrackExceptionEvent) => {
         await this.handleTrackException(data);
       },
       update: async (data: PlayerUpdate) => {
-        if (!this.queue.current) return this.emit(Events.Debug, this, `No Track to Update ${this.guildId}`);
-        this.queue.current.position = data.state.position || 0;
-        this.emit(Events.PlayerUpdate, this, this.queue.current, data);
+        await this.handleTrackUpdate(data);
       },
       stuck: async (data: TrackStuckEvent) => {
         await this.handleTrackStuck(data);
       },
       resumed: async () => {
-        this.emit(Events.PlayerResumed, this);
+        await this.handleTrackResumed();
       },
     };
 
@@ -129,70 +132,102 @@ export class DamonJsPlayer {
     this.player.on('stuck', eventHandlers.stuck);
     this.player.on('resumed', eventHandlers.resumed);
   }
-
+  private async handleTrackStart() {
+    if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
+    this.isTrackPlaying = true;
+    this.player.paused = false;
+    this.emit(Events.PlayerStart, this, this.queue.current);
+  }
   private async handleTrackEnd(data: TrackEndEvent) {
-    this.isTrackPlaying = false;
-    this.emit(Events.PlayerEnd, this);
-    await this.skip().catch(() => null);
+    return await this.withLock('trackEnd', async () => {
+      if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
+        return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
+      }
+      if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
+      this.isTrackPlaying = false;
+      this.emit(Events.PlayerEnd, this, this.queue.current);
+      await this.skip().catch(() => null);
+    });
   }
   private async handlePlayerEmpty() {
-    this.isTrackPlaying = false;
-
-    this.emit(Events.PlayerEmpty, this);
-    return this;
-  }
-
-  private async handleTrackException(data: TrackExceptionEvent) {
-    const now = Date.now();
-
-    const maxTime = this.damonjs.exceptions.time;
-    const exceptions = this.errors.exceptionData.exceptions.filter((time: number) => now - time < maxTime);
-
-    if (exceptions.length < this.damonjs.exceptions.max) {
-      this.errors.exceptionData.lastExceptionTime = now;
+    return await this.withLock('playerEmpty', async () => {
       this.isTrackPlaying = false;
-      this.emit(Events.PlayerException, this, data);
-      exceptions.push(now);
-      this.errors.exceptionData.exceptions = exceptions;
-    } else {
-      this.emit(Events.Debug, this, `Player ${this.guildId} hit the max exceptions limit`);
-    }
+      this.emit(Events.PlayerEmpty, this, this.queue.lastTrack);
+      return this;
+    });
+  }
+  private async handleTrackResumed() {
+    return await this.withLock('trackResumed', async () => {
+      this.emit(Events.PlayerResumed, this);
+    });
+  }
+  private async handleTrackUpdate(data: PlayerUpdate) {
+    return await this.withLock('trackUpdate', async () => {
+      if (!this.queue.current) return this.emit(Events.Debug, this, `No Track to Update ${this.guildId}`);
+      this.queue.current.position = data.state.position || 0;
+      this.emit(Events.PlayerUpdate, this, this.queue.current, data);
+    });
+  }
+  private async handleTrackException(data: TrackExceptionEvent) {
+    return await this.withLock('trackException', async () => {
+      const now = Date.now();
+
+      const maxTime = this.damonjs.exceptions.time;
+      const exceptions = this.errors.exceptionData.exceptions.filter((time: number) => now - time < maxTime);
+
+      if (exceptions.length < this.damonjs.exceptions.max) {
+        this.errors.exceptionData.lastExceptionTime = now;
+        this.isTrackPlaying = false;
+        this.emit(Events.PlayerException, this, data);
+        exceptions.push(now);
+        this.errors.exceptionData.exceptions = exceptions;
+      } else {
+        this.emit(Events.Debug, this, `Player ${this.guildId} hit the max exceptions limit`);
+      }
+    });
   }
 
   private async handleTrackStuck(data: TrackStuckEvent) {
-    const now = Date.now();
+    return await this.withLock('trackStuck', async () => {
+      const now = Date.now();
 
-    const maxTime = this.damonjs.stuck.time;
-    const stucks = this.errors.stuckData.stucks.filter((time: number) => now - time < maxTime);
+      const maxTime = this.damonjs.stuck.time;
+      const stucks = this.errors.stuckData.stucks.filter((time: number) => now - time < maxTime);
 
-    if (stucks.length < this.damonjs.stuck.max) {
-      this.errors.stuckData.lastStuckTime = now;
-      this.isTrackPlaying = false;
-      this.emit(Events.PlayerStuck, this, data);
-      stucks.push(now);
-      this.errors.stuckData.stucks = stucks;
-    } else {
-      this.emit(Events.Debug, this, `Player ${this.guildId} hit the max stuck limit`);
-    }
+      if (stucks.length < this.damonjs.stuck.max) {
+        this.errors.stuckData.lastStuckTime = now;
+        this.isTrackPlaying = false;
+        this.emit(Events.PlayerStuck, this, data);
+        stucks.push(now);
+        this.errors.stuckData.stucks = stucks;
+      } else {
+        this.emit(Events.Debug, this, `Player ${this.guildId} hit the max stuck limit`);
+      }
+    });
   }
 
   private async handleResolveError(current: DamonJsTrack, resolveResult: Error) {
-    const now = Date.now();
+    return await this.withLock('trackResolveError', async () => {
+      const now = Date.now();
 
-    const maxTime = this.damonjs.resolveError.time;
-    const resolveErrors = this.errors.resolveErrorData.resolveErrors.filter((time: number) => now - time < maxTime);
+      const maxTime = this.damonjs.resolveError.time;
+      const resolveErrors = this.errors.resolveErrorData.resolveErrors.filter((time: number) => now - time < maxTime);
 
-    if (resolveErrors.length < this.damonjs.resolveError.max) {
-      this.errors.resolveErrorData.lastResolveErrorTime = now;
-      this.isTrackPlaying = false;
-      this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
-      resolveErrors.push(now);
-      this.errors.resolveErrorData.resolveErrors = resolveErrors;
-    } else {
-      this.emit(Events.Debug, this, `Player ${this.guildId} hit the max resolve error limit`);
-    }
+      if (resolveErrors.length < this.damonjs.resolveError.max) {
+        this.errors.resolveErrorData.lastResolveErrorTime = now;
+        this.isTrackPlaying = false;
+        this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
+        resolveErrors.push(now);
+        this.errors.resolveErrorData.resolveErrors = resolveErrors;
+      } else {
+        this.emit(Events.Debug, this, `Player ${this.guildId} hit the max resolve error limit`);
+      }
+    });
   }
 
+  private async handleTrackClosed(data: WebSocketClosedEvent) {
+    this.emit(Events.PlayerClosed, this, data);
+  }
   /**
    * Get GuildId
    */
