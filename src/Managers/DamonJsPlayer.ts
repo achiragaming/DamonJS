@@ -201,7 +201,6 @@ export class DamonJsPlayer {
       if (!this.queue.current) return;
       this.isTrackPlaying = false;
       this.emit(Events.PlayerEnd, this, this.queue.current, data);
-  
     });
   }
 
@@ -308,6 +307,15 @@ export class DamonJsPlayer {
       this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
       return this;
     });
+  }
+  private isInCooldown(): boolean {
+    const now = Date.now();
+    return (
+      now - this.errors.trackendSpamData.lastTrackEndTime < this.damonjs.trackEndSpam.rule.cooldown ||
+      now - this.errors.exceptionData.lastExceptionTime < this.damonjs.exceptions.rule.cooldown ||
+      now - this.errors.stuckData.lastStuckTime < this.damonjs.stuck.rule.cooldown ||
+      now - this.errors.resolveErrorData.lastResolveErrorTime < this.damonjs.resolveError.rule.cooldown
+    );
   }
   /**
    * Get GuildId
@@ -418,7 +426,7 @@ export class DamonJsPlayer {
    */
   public async play(tracks?: DamonJsTrack[], options?: PlayOptions): Promise<DamonJsPlayer> {
     if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
-
+    if (this.isInCooldown()) throw new DamonJsError(1, 'Player is in cooldown');
     if (!tracks && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
     if (!options || typeof options.replaceCurrent !== 'boolean') options = { ...options, replaceCurrent: false };
 
