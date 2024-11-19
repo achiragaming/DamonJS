@@ -189,6 +189,7 @@ export class DamonJsPlayer {
     // Handle protective measures separately
     return this.lockAction('trackEnd', async () => {
       this.isTrackPlaying = false;
+      this.cooldowns.trackEnd = true;
       const now = Date.now();
       const trackEnds = this.errors.trackendSpamData.trackEnds.filter(
         (time) => now - time < this.damonjs.trackEndSpam.rule.timeFrame,
@@ -201,7 +202,6 @@ export class DamonJsPlayer {
       this.errors.trackendSpamData.trackEnds = trackEnds;
 
       if (trackEnds.length >= this.damonjs.trackEndSpam.rule.maxhits) {
-        this.cooldowns.trackEnd = true;
         destroyTriggers.push(now);
         this.errors.trackendSpamData.trackEnds = [];
 
@@ -211,13 +211,13 @@ export class DamonJsPlayer {
         }
 
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.trackEndSpam.rule.cooldown));
-        this.cooldowns.trackEnd = false;
       }
       if (this.queue.current) {
         this.emit(Events.PlayerEnd, this, this.queue.current, data);
-        if (this.damonjs.trackEndSpam.skip) {
-          await this.skip();
-        }
+      }
+      this.cooldowns.trackEnd = false;
+      if (this.damonjs.trackEndSpam.skip) {
+        await this.skip();
       }
     });
   }
@@ -225,6 +225,7 @@ export class DamonJsPlayer {
   private async handleTrackException(data: TrackExceptionEvent) {
     return this.lockAction('trackException', async () => {
       this.isTrackPlaying = false;
+      this.cooldowns.exception = true;
       const now = Date.now();
       const exceptions = this.errors.exceptionData.exceptions.filter(
         (time) => now - time < this.damonjs.exceptions.rule.timeFrame,
@@ -237,7 +238,6 @@ export class DamonJsPlayer {
       this.errors.exceptionData.exceptions = exceptions;
 
       if (exceptions.length >= this.damonjs.exceptions.rule.maxhits) {
-        this.cooldowns.exception = true;
         destroyTriggers.push(now);
         this.errors.exceptionData.exceptions = [];
 
@@ -247,13 +247,13 @@ export class DamonJsPlayer {
         }
 
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.exceptions.rule.cooldown));
-        this.cooldowns.exception = false;
       }
       if (this.queue.current) {
         this.emit(Events.PlayerException, this, data);
-        if (this.damonjs.exceptions.skip) {
-          await this.skip();
-        }
+      }
+      this.cooldowns.exception = false;
+      if (this.damonjs.exceptions.skip) {
+        await this.skip();
       }
     });
   }
@@ -261,6 +261,7 @@ export class DamonJsPlayer {
   private async handleTrackStuck(data: TrackStuckEvent) {
     return this.lockAction('trackStuck', async () => {
       this.isTrackPlaying = false;
+      this.cooldowns.stuck = true;
       const now = Date.now();
       const stucks = this.errors.stuckData.stucks.filter((time) => now - time < this.damonjs.stuck.rule.timeFrame);
       const destroyTriggers = this.errors.stuckData.destroyTriggers.filter(
@@ -271,7 +272,6 @@ export class DamonJsPlayer {
       this.errors.stuckData.stucks = stucks;
 
       if (stucks.length >= this.damonjs.stuck.rule.maxhits) {
-        this.cooldowns.stuck = true;
         destroyTriggers.push(now);
         this.errors.stuckData.stucks = [];
 
@@ -281,14 +281,13 @@ export class DamonJsPlayer {
         }
 
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.stuck.rule.cooldown));
-        this.cooldowns.stuck = false;
       }
       if (this.queue.current) {
         this.emit(Events.PlayerStuck, this, data);
-
-        if (this.damonjs.stuck.skip) {
-          await this.skip();
-        }
+      }
+      this.cooldowns.stuck = false;
+      if (this.damonjs.stuck.skip) {
+        await this.skip();
       }
     });
   }
@@ -298,6 +297,7 @@ export class DamonJsPlayer {
 
     return this.lockAction('trackResolveError', async () => {
       this.isTrackPlaying = false;
+      this.cooldowns.resolveError = true;
       const now = Date.now();
       const resolveErrors = this.errors.resolveErrorData.resolveErrors.filter(
         (time) => now - time < this.damonjs.resolveError.rule.timeFrame,
@@ -310,7 +310,6 @@ export class DamonJsPlayer {
       this.errors.resolveErrorData.resolveErrors = resolveErrors;
 
       if (resolveErrors.length >= this.damonjs.resolveError.rule.maxhits) {
-        this.cooldowns.resolveError = true;
         destroyTriggers.push(now);
         this.errors.resolveErrorData.resolveErrors = [];
 
@@ -320,13 +319,13 @@ export class DamonJsPlayer {
         }
 
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.resolveError.rule.cooldown));
-        this.cooldowns.resolveError = false;
       }
       if (this.queue.current) {
         this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
-        if (this.damonjs.resolveError.skip) {
-          await this.skip();
-        }
+      }
+      this.cooldowns.resolveError = false;
+      if (this.damonjs.resolveError.skip) {
+        await this.skip();
       }
     });
   }
@@ -442,41 +441,43 @@ export class DamonJsPlayer {
    * @returns {Promise<DamonJsPlayer>}
    */
   public async play(tracks?: DamonJsTrack[], options?: PlayOptions): Promise<DamonJsPlayer> {
-    if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
-    if (this.isInCooldown()) throw new DamonJsError(1, 'Player is in cooldown');
-    if (!tracks && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
-    if (!options || typeof options.replaceCurrent !== 'boolean') options = { ...options, replaceCurrent: false };
+    return this.lockAction('play', async () => {
+      if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+      if (this.isInCooldown()) throw new DamonJsError(1, 'Player is in cooldown');
+      if (!tracks && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
+      if (!options || typeof options.replaceCurrent !== 'boolean') options = { ...options, replaceCurrent: false };
 
-    if (tracks) {
-      this.queue.splice(this.queue.currentId + 1, options.replaceCurrent && this.queue.current ? 1 : 0, ...tracks);
-      return this.stopTrack();
-    }
+      if (tracks) {
+        this.queue.splice(this.queue.currentId + 1, options.replaceCurrent && this.queue.current ? 1 : 0, ...tracks);
+        return this.stopTrack();
+      }
 
-    if (this.playable) {
-      this.queue.currentId--;
-      await this.stopTrack();
-    } else {
-      if (!this.queue.current) {
-        await this.handlePlayerEmpty();
-        throw new DamonJsError(1, 'No track is available to play');
-      }
-      const current = this.queue.current;
-      current.setDamonJs(this.damonjs);
-      const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
-      if (resolveResult instanceof Error) {
-        await this.handleResolveError(current, resolveResult);
-        throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${resolveResult.message}`);
-      }
-      let playOptions = { track: { encoded: current.encoded, userData: current.requester ?? {} } };
-      if (options) playOptions = { ...playOptions, ...options };
+      if (this.playable) {
+        this.queue.currentId--;
+        await this.stopTrack();
+      } else {
+        if (!this.queue.current) {
+          await this.handlePlayerEmpty();
+          throw new DamonJsError(1, 'No track is available to play');
+        }
+        const current = this.queue.current;
+        current.setDamonJs(this.damonjs);
+        const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
+        if (resolveResult instanceof Error) {
+          await this.handleResolveError(current, resolveResult);
+          throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${resolveResult.message}`);
+        }
+        let playOptions = { track: { encoded: current.encoded, userData: current.requester ?? {} } };
+        if (options) playOptions = { ...playOptions, ...options };
 
-      const playerResult = await this.player.playTrack(playOptions).catch((e: Error) => e);
-      if (playerResult instanceof Error) {
-        await this.handleResolveError(current, playerResult);
-        throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${playerResult.message}`);
+        const playerResult = await this.player.playTrack(playOptions).catch((e: Error) => e);
+        if (playerResult instanceof Error) {
+          await this.handleResolveError(current, playerResult);
+          throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${playerResult.message}`);
+        }
       }
-    }
-    return this;
+      return this;
+    });
   }
 
   /**
