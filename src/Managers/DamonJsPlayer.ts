@@ -446,7 +446,7 @@ export class DamonJsPlayer {
    * @returns {Promise<DamonJsPlayer>}
    */
   public async play(tracks?: DamonJsTrack[], options?: PlayOptions): Promise<DamonJsPlayer> {
-    return this.lockAction('play', async () => {
+ 
       if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
       if (this.isInCooldown()) throw new DamonJsError(1, 'Player is in cooldown');
       if (!tracks && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
@@ -482,7 +482,7 @@ export class DamonJsPlayer {
         }
       }
       return this;
-    });
+    
   }
 
   /**
