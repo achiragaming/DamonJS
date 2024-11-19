@@ -186,13 +186,9 @@ export class DamonJsPlayer {
     return this;
   }
   private async handleTrackEnd(data: TrackEndEvent) {
-    // Emit event immediately
-    if (!this.queue.current) return;
-    this.isTrackPlaying = false;
-    this.emit(Events.PlayerEnd, this, this.queue.current, data);
-
     // Handle protective measures separately
     return this.lockAction('trackEnd', async () => {
+      this.isTrackPlaying = false;
       const now = Date.now();
       const trackEnds = this.errors.trackendSpamData.trackEnds.filter(
         (time) => now - time < this.damonjs.trackEndSpam.rule.timeFrame,
@@ -217,19 +213,18 @@ export class DamonJsPlayer {
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.trackEndSpam.rule.cooldown));
         this.cooldowns.trackEnd = false;
       }
-
-      if (this.damonjs.trackEndSpam.skip) {
-        await this.skip();
+      if (this.queue.current) {
+        this.emit(Events.PlayerEnd, this, this.queue.current, data);
+        if (this.damonjs.trackEndSpam.skip) {
+          await this.skip();
+        }
       }
     });
   }
 
   private async handleTrackException(data: TrackExceptionEvent) {
-    // Emit event immediately
-    this.isTrackPlaying = false;
-    this.emit(Events.PlayerException, this, data);
-
-    return this.lockAction('exception', async () => {
+    return this.lockAction('trackException', async () => {
+      this.isTrackPlaying = false;
       const now = Date.now();
       const exceptions = this.errors.exceptionData.exceptions.filter(
         (time) => now - time < this.damonjs.exceptions.rule.timeFrame,
@@ -254,19 +249,18 @@ export class DamonJsPlayer {
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.exceptions.rule.cooldown));
         this.cooldowns.exception = false;
       }
-
-      if (this.damonjs.exceptions.skip) {
-        await this.skip();
+      if (this.queue.current) {
+        this.emit(Events.PlayerException, this, data);
+        if (this.damonjs.exceptions.skip) {
+          await this.skip();
+        }
       }
     });
   }
 
   private async handleTrackStuck(data: TrackStuckEvent) {
-    // Emit event immediately
-    this.isTrackPlaying = false;
-    this.emit(Events.PlayerStuck, this, data);
-
-    return this.lockAction('stuck', async () => {
+    return this.lockAction('trackStuck', async () => {
+      this.isTrackPlaying = false;
       const now = Date.now();
       const stucks = this.errors.stuckData.stucks.filter((time) => now - time < this.damonjs.stuck.rule.timeFrame);
       const destroyTriggers = this.errors.stuckData.destroyTriggers.filter(
@@ -289,19 +283,21 @@ export class DamonJsPlayer {
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.stuck.rule.cooldown));
         this.cooldowns.stuck = false;
       }
+      if (this.queue.current) {
+        this.emit(Events.PlayerStuck, this, data);
 
-      if (this.damonjs.stuck.skip) {
-        await this.skip();
+        if (this.damonjs.stuck.skip) {
+          await this.skip();
+        }
       }
     });
   }
 
   private async handleResolveError(current: DamonJsTrack, resolveResult: Error) {
     // Emit event immediately
-    this.isTrackPlaying = false;
-    this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
 
-    return this.lockAction('resolveError', async () => {
+    return this.lockAction('trackResolveError', async () => {
+      this.isTrackPlaying = false;
       const now = Date.now();
       const resolveErrors = this.errors.resolveErrorData.resolveErrors.filter(
         (time) => now - time < this.damonjs.resolveError.rule.timeFrame,
@@ -326,9 +322,11 @@ export class DamonJsPlayer {
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.resolveError.rule.cooldown));
         this.cooldowns.resolveError = false;
       }
-
-      if (this.damonjs.resolveError.skip) {
-        await this.skip();
+      if (this.queue.current) {
+        this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
+        if (this.damonjs.resolveError.skip) {
+          await this.skip();
+        }
       }
     });
   }
