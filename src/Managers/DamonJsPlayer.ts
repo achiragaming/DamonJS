@@ -148,6 +148,7 @@ export class DamonJsPlayer {
       if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
       this.isTrackPlaying = true;
       this.player.paused = false;
+      this.queue.current.data.clear();
       this.emit(Events.PlayerStart, this, this.queue.current);
     });
   }
