@@ -184,10 +184,12 @@ export class DamonJsPlayer {
 
       if (trackEnds.length >= this.damonjs.trackEndSpam.rule.maxhits) {
         destroyTriggers.push(now);
+        this.errors.trackendSpamData.trackEnds = [];
         if (destroyTriggers.length >= this.damonjs.trackEndSpam.destroy.maxhits) {
           await this.destroy();
           return;
         }
+
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.trackEndSpam.rule.cooldown));
       }
 
@@ -199,7 +201,7 @@ export class DamonJsPlayer {
       if (!this.queue.current) return;
       this.isTrackPlaying = false;
       this.emit(Events.PlayerEnd, this, this.queue.current, data);
-      await this.skip().catch(() => null);
+  
     });
   }
 
@@ -215,10 +217,12 @@ export class DamonJsPlayer {
 
       if (exceptions.length >= this.damonjs.exceptions.rule.maxhits) {
         destroyTriggers.push(now);
+        this.errors.exceptionData.exceptions = [];
         if (destroyTriggers.length >= this.damonjs.exceptions.destroy.maxhits) {
           await this.destroy();
           return;
         }
+
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.exceptions.rule.cooldown));
       }
 
@@ -241,6 +245,7 @@ export class DamonJsPlayer {
 
       if (stucks.length >= this.damonjs.stuck.rule.maxhits) {
         destroyTriggers.push(now);
+        this.errors.stuckData.stucks = [];
         if (destroyTriggers.length >= this.damonjs.stuck.destroy.maxhits) {
           await this.destroy();
           return;
@@ -269,6 +274,7 @@ export class DamonJsPlayer {
 
       if (resolveErrors.length >= this.damonjs.resolveError.rule.maxhits) {
         destroyTriggers.push(now);
+        this.errors.resolveErrorData.resolveErrors = [];
         if (destroyTriggers.length >= this.damonjs.resolveError.destroy.maxhits) {
           await this.destroy();
           return;
