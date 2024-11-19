@@ -16,22 +16,50 @@ export interface DamonJsOptions {
   defaultSearchEngine: SearchEngines;
   /** TrackEnd spam config until skip stops */
   trackEndSpam?: {
-    max: number;
-    time: number;
+    rule: {
+      maxhits: number;
+      timeFrame: number;
+      cooldown: number;
+    };
+    destroy: {
+      timeFrame: number;
+      maxhits: number;
+    };
   };
   /** Exception config until skip stops */
   exceptions?: {
-    max: number;
-    time: number;
+    rule: {
+      maxhits: number;
+      timeFrame: number;
+      cooldown: number;
+    };
+    destroy: {
+      timeFrame: number;
+      maxhits: number;
+    };
   };
   /** Stuck config until skip stops */
   stuck?: {
-    max: number;
-    time: number;
+    rule: {
+      maxhits: number;
+      timeFrame: number;
+      cooldown: number;
+    };
+    destroy: {
+      timeFrame: number;
+      maxhits: number;
+    };
   };
   resolveError?: {
-    max: number;
-    time: number;
+    rule: {
+      maxhits: number;
+      timeFrame: number;
+      cooldown: number;
+    };
+    destroy: {
+      timeFrame: number;
+      maxhits: number;
+    };
   };
   /** DamonJs plugins */
   plugins?: DamonJsPlugin[];

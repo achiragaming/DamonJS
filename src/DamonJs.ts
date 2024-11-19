@@ -44,21 +44,49 @@ export class DamonJs extends EventEmitter {
 
   public readonly players: Map<string, DamonJsPlayer>;
   public exceptions: {
-    max: number;
-    time: number;
+    rule: {
+      maxhits: number;
+      timeFrame: number;
+      cooldown: number;
+    };
+    destroy: {
+      timeFrame: number;
+      maxhits: number;
+    };
   };
   public trackEndSpam: {
-    max: number;
-    time: number;
+    rule: {
+      maxhits: number;
+      timeFrame: number;
+      cooldown: number;
+    };
+    destroy: {
+      timeFrame: number;
+      maxhits: number;
+    };
   };
   /** Stuck config until skip stops */
   public stuck: {
-    max: number;
-    time: number;
+    rule: {
+      maxhits: number;
+      timeFrame: number;
+      cooldown: number;
+    };
+    destroy: {
+      timeFrame: number;
+      maxhits: number;
+    };
   };
   public resolveError: {
-    max: number;
-    time: number;
+    rule: {
+      maxhits: number;
+      timeFrame: number;
+      cooldown: number;
+    };
+    destroy: {
+      timeFrame: number;
+      maxhits: number;
+    };
   };
   /**
    * Initialize a DamonJs instance.
@@ -72,14 +100,30 @@ export class DamonJs extends EventEmitter {
 
     this.shoukaku = shoukaku;
 
-    this.exceptions = this.DamonJsOptions.exceptions ? this.DamonJsOptions.exceptions : { max: 3, time: 30 * 1000 };
-    this.stuck = this.DamonJsOptions.stuck ? this.DamonJsOptions.stuck : { max: 3, time: 30 * 1000 };
+    this.exceptions = this.DamonJsOptions.exceptions
+      ? this.DamonJsOptions.exceptions
+      : {
+          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
+          destroy: { maxhits: 4, timeFrame: 30 * 1000 },
+        };
+    this.stuck = this.DamonJsOptions.stuck
+      ? this.DamonJsOptions.stuck
+      : {
+          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
+          destroy: { maxhits: 4, timeFrame: 30 * 1000 },
+        };
     this.trackEndSpam = this.DamonJsOptions.trackEndSpam
       ? this.DamonJsOptions.trackEndSpam
-      : { max: 3, time: 30 * 1000 };
+      : {
+          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
+          destroy: { maxhits: 4, timeFrame: 30 * 1000 },
+        };
     this.resolveError = this.DamonJsOptions.resolveError
       ? this.DamonJsOptions.resolveError
-      : { max: 3, time: 30 * 1000 };
+      : {
+          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
+          destroy: { maxhits: 4, timeFrame: 30 * 1000 },
+        };
 
     if (this.DamonJsOptions.plugins) {
       for (const [, plugin] of this.DamonJsOptions.plugins.entries()) {
