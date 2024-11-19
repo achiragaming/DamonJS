@@ -19,7 +19,7 @@ export interface DamonJsOptions {
     rule: {
       maxhits: number;
       timeFrame: number;
-      cooldown: number;
+      // cooldown: number;
     };
     destroy: {
       timeFrame: number;
@@ -32,7 +32,7 @@ export interface DamonJsOptions {
     rule: {
       maxhits: number;
       timeFrame: number;
-      cooldown: number;
+      // cooldown: number;
     };
     destroy: {
       timeFrame: number;
@@ -45,7 +45,7 @@ export interface DamonJsOptions {
     rule: {
       maxhits: number;
       timeFrame: number;
-      cooldown: number;
+      // cooldown: number;
     };
     destroy: {
       timeFrame: number;
@@ -57,7 +57,7 @@ export interface DamonJsOptions {
     rule: {
       maxhits: number;
       timeFrame: number;
-      cooldown: number;
+      // cooldown: number;
     };
     destroy: {
       timeFrame: number;

@@ -47,7 +47,7 @@ export class DamonJs extends EventEmitter {
     rule: {
       maxhits: number;
       timeFrame: number;
-      cooldown: number;
+      // cooldown: number;
     };
     destroy: {
       timeFrame: number;
@@ -59,7 +59,7 @@ export class DamonJs extends EventEmitter {
     rule: {
       maxhits: number;
       timeFrame: number;
-      cooldown: number;
+      // cooldown: number;
     };
     destroy: {
       timeFrame: number;
@@ -72,7 +72,7 @@ export class DamonJs extends EventEmitter {
     rule: {
       maxhits: number;
       timeFrame: number;
-      cooldown: number;
+      // cooldown: number;
     };
     destroy: {
       timeFrame: number;
@@ -84,7 +84,7 @@ export class DamonJs extends EventEmitter {
     rule: {
       maxhits: number;
       timeFrame: number;
-      cooldown: number;
+      // cooldown: number;
     };
     destroy: {
       timeFrame: number;
@@ -108,28 +108,28 @@ export class DamonJs extends EventEmitter {
     this.exceptions = this.DamonJsOptions.exceptions
       ? this.DamonJsOptions.exceptions
       : {
-          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
+          rule: { maxhits: 3, timeFrame: 30 * 1000},
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },
           skip: true,
         };
     this.stuck = this.DamonJsOptions.stuck
       ? this.DamonJsOptions.stuck
       : {
-          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
+          rule: { maxhits: 3, timeFrame: 30 * 1000 },
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },
           skip: true,
         };
     this.trackEndSpam = this.DamonJsOptions.trackEndSpam
       ? this.DamonJsOptions.trackEndSpam
       : {
-          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
+          rule: { maxhits: 3, timeFrame: 30 * 1000 },
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },
           skip: true,
         };
     this.resolveError = this.DamonJsOptions.resolveError
       ? this.DamonJsOptions.resolveError
       : {
-          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
+          rule: { maxhits: 3, timeFrame: 30 * 1000 },
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },
           skip: true,
         };
