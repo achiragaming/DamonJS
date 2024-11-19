@@ -91,23 +91,19 @@ export class DamonJsPlayer {
   }
   private async lockAction<T>(key: string, operation: () => Promise<T>): Promise<T> {
     const existingLock = Array.from(this.lockMap.keys()).find((existingKey) => key.startsWith(existingKey));
-
+  
     if (existingLock) {
       await this.lockMap.get(existingLock);
     }
-
-    const lockPromise = (async () => {
-      try {
-        const result = await operation();
-        return result;
-      } finally {
-        this.lockMap.delete(key);
-      }
-    })();
-
+  
+    const lockPromise = operation();
     this.lockMap.set(key, lockPromise);
-
-    return await lockPromise;
+  
+    try {
+      return await lockPromise;
+    } finally {
+      this.lockMap.delete(key);
+    }
   }
   public async init() {
     if (this.state === PlayerState.CONNECTED)
@@ -441,7 +437,7 @@ export class DamonJsPlayer {
    * @returns {Promise<DamonJsPlayer>}
    */
   public async play(tracks?: DamonJsTrack[], options?: PlayOptions): Promise<DamonJsPlayer> {
-    return this.lockAction('play', async () => {
+
       if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
       if (this.isInCooldown()) throw new DamonJsError(1, 'Player is in cooldown');
       if (!tracks && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
@@ -477,7 +473,7 @@ export class DamonJsPlayer {
         }
       }
       return this;
-    });
+  
   }
 
   /**
