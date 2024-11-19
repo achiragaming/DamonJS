@@ -210,6 +210,10 @@ export class DamonJsPlayer {
       if (!this.queue.current) return;
       this.isTrackPlaying = false;
       this.emit(Events.PlayerEnd, this, this.queue.current, data);
+      if (this.damonjs.trackEndSpam.skip) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await this.skip();
+      }
     });
   }
 
@@ -242,6 +246,10 @@ export class DamonJsPlayer {
       this.errors.exceptionData.lastExceptionTime = now;
       this.isTrackPlaying = false;
       this.emit(Events.PlayerException, this, data);
+      if (this.damonjs.exceptions.skip) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await this.skip();
+      }
     });
   }
 
@@ -271,6 +279,10 @@ export class DamonJsPlayer {
       this.errors.stuckData.lastStuckTime = now;
       this.isTrackPlaying = false;
       this.emit(Events.PlayerStuck, this, data);
+      if (this.damonjs.stuck.skip) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await this.skip();
+      }
     });
   }
 
@@ -302,6 +314,10 @@ export class DamonJsPlayer {
       this.errors.resolveErrorData.lastResolveErrorTime = now;
       this.isTrackPlaying = false;
       this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
+      if (this.damonjs.resolveError.skip) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await this.skip();
+      }
     });
   }
 

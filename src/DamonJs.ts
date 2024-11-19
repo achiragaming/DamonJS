@@ -53,6 +53,7 @@ export class DamonJs extends EventEmitter {
       timeFrame: number;
       maxhits: number;
     };
+    skip: boolean;
   };
   public trackEndSpam: {
     rule: {
@@ -64,6 +65,7 @@ export class DamonJs extends EventEmitter {
       timeFrame: number;
       maxhits: number;
     };
+    skip: boolean;
   };
   /** Stuck config until skip stops */
   public stuck: {
@@ -76,6 +78,7 @@ export class DamonJs extends EventEmitter {
       timeFrame: number;
       maxhits: number;
     };
+    skip: boolean;
   };
   public resolveError: {
     rule: {
@@ -87,7 +90,9 @@ export class DamonJs extends EventEmitter {
       timeFrame: number;
       maxhits: number;
     };
+    skip: boolean;
   };
+
   /**
    * Initialize a DamonJs instance.
    * @param DamonJsOptions DamonJsOptions
@@ -105,24 +110,28 @@ export class DamonJs extends EventEmitter {
       : {
           rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },
+          skip: true,
         };
     this.stuck = this.DamonJsOptions.stuck
       ? this.DamonJsOptions.stuck
       : {
           rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },
+          skip: true,
         };
     this.trackEndSpam = this.DamonJsOptions.trackEndSpam
       ? this.DamonJsOptions.trackEndSpam
       : {
           rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },
+          skip: true,
         };
     this.resolveError = this.DamonJsOptions.resolveError
       ? this.DamonJsOptions.resolveError
       : {
           rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },
+          skip: true,
         };
 
     if (this.DamonJsOptions.plugins) {

@@ -25,6 +25,7 @@ export interface DamonJsOptions {
       timeFrame: number;
       maxhits: number;
     };
+    skip: boolean;
   };
   /** Exception config until skip stops */
   exceptions?: {
@@ -37,6 +38,7 @@ export interface DamonJsOptions {
       timeFrame: number;
       maxhits: number;
     };
+    skip: boolean;
   };
   /** Stuck config until skip stops */
   stuck?: {
@@ -49,6 +51,7 @@ export interface DamonJsOptions {
       timeFrame: number;
       maxhits: number;
     };
+    skip: boolean;
   };
   resolveError?: {
     rule: {
@@ -60,6 +63,7 @@ export interface DamonJsOptions {
       timeFrame: number;
       maxhits: number;
     };
+    skip: boolean;
   };
   /** DamonJs plugins */
   plugins?: DamonJsPlugin[];
