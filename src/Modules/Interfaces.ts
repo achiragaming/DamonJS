@@ -4,25 +4,19 @@ import { DamonJsTrack } from '../Managers/Supports/DamonJsTrack';
 import { PlayerUpdate, TrackExceptionEvent, TrackStuckEvent, Utils, WebSocketClosedEvent } from 'shoukaku';
 import { Snowflake } from 'discord.js';
 export interface DamonJsOptions {
-  /** Skip the track on exception */
-  skipOnException?: boolean;
-  /** Skip the track on stuck */
-  skipOnStuck?: boolean;
-  /** Skip the track on stuck */
-  skipResolveError?: boolean;
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
   /** Exception config until skip stops */
-  exceptions: {
+  exceptions?: {
     max: number;
     time: number;
   };
   /** Stuck config until skip stops */
-  stuck: {
+  stuck?: {
     max: number;
     time: number;
   };
-  resolveError: {
+  resolveError?: {
     max: number;
     time: number;
   };

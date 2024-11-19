@@ -50,7 +50,11 @@ export class DamonJsPlayer {
   public loop: LoopState = LoopState.None;
   public readonly data: Map<string, any>;
   public search: (query: string, options: DamonJsSearchOptions) => Promise<DamonJsSearchResult>;
-  public readonly errors: { exceptions: number[]; stuck: number[]; resolveError: number[] };
+  public readonly errors: {
+    exceptionData: { exceptions: number[]; lastExceptionTime: number };
+    stuckData: { stucks: number[]; lastStuckTime: number };
+    resolveErrorData: { resolveErrors: number[]; lastResolveErrorTime: number };
+  };
 
   constructor(
     damonjs: DamonJs,
@@ -67,7 +71,11 @@ export class DamonJsPlayer {
     this.queue = new DamonJsQueue(this);
     this.data = new Map(options.data);
     this.textId = this.options.textId;
-    this.errors = { exceptions: [], stuck: [], resolveError: [] };
+    this.errors = {
+      exceptionData: { exceptions: [], lastExceptionTime: 0 },
+      stuckData: { lastStuckTime: 0, stucks: [] },
+      resolveErrorData: { resolveErrors: [], lastResolveErrorTime: 0 },
+    };
     this.search = (query, searchOptions) => this.damonjs.search(query, searchOptions, this);
     this.isTrackPlaying = false;
   }
@@ -127,65 +135,65 @@ export class DamonJsPlayer {
     this.emit(Events.PlayerEnd, this);
     await this.skip().catch(() => null);
   }
-
-  private async handleTrackException(data: TrackExceptionEvent) {
-    this.isTrackPlaying = false;
-
-    const nowTime = Date.now();
-    const exceptionArr = this.errors.exceptions;
-    const maxTime = this.damonjs.DamonJsOptions.exceptions.time;
-    const exceptions = exceptionArr.filter((time: number) => nowTime - time < maxTime);
-    if (exceptions.length < this.damonjs.DamonJsOptions.exceptions.max) {
-      this.emit(Events.PlayerException, this, data);
-      exceptions.push(nowTime);
-      this.errors.exceptions = exceptions;
-      if (this.damonjs.DamonJsOptions.skipOnException) {
-        await this.skip().catch(() => null);
-      }
-    }
-  }
-
-  private async handleTrackStuck(data: TrackStuckEvent) {
-    this.isTrackPlaying = false;
-
-    const nowTime = Date.now();
-    const stuckErr = this.errors.stuck;
-    const maxTime = this.damonjs.DamonJsOptions.stuck.time;
-    const stucks = stuckErr.filter((time: number) => nowTime - time < maxTime);
-
-    // Only emit event and skip if below max threshold
-    if (stucks.length < this.damonjs.DamonJsOptions.stuck.max) {
-      this.emit(Events.PlayerStuck, this, data);
-      stucks.push(nowTime);
-      this.errors.stuck = stucks;
-
-      if (this.damonjs.DamonJsOptions.skipOnStuck) {
-        await this.skip().catch(() => null);
-      }
-    }
-  }
-  private async handleResolveError(current: DamonJsTrack, resolveResult: Error) {
-    this.isTrackPlaying = false;
-
-    const nowTime = Date.now();
-    const resolveErr = this.errors.resolveError;
-    const maxTime = this.damonjs.DamonJsOptions.resolveError.time;
-    const rErrors = resolveErr.filter((time: number) => nowTime - time < maxTime);
-    if (rErrors.length < this.damonjs.DamonJsOptions.resolveError.max) {
-      this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
-      rErrors.push(nowTime);
-      this.errors.resolveError = rErrors;
-      if (this.damonjs.DamonJsOptions.skipResolveError) {
-        await this.skip().catch(() => null);
-      }
-    }
-  }
-
   private async handlePlayerEmpty() {
     this.isTrackPlaying = false;
 
     this.emit(Events.PlayerEmpty, this);
     return this;
+  }
+
+  private async handleTrackException(data: TrackExceptionEvent) {
+    const now = Date.now();
+
+    this.errors.exceptionData.lastExceptionTime = now;
+    this.isTrackPlaying = false;
+
+    const maxTime = this.damonjs.exceptions.time;
+    const exceptions = this.errors.exceptionData.exceptions.filter((time: number) => now - time < maxTime);
+
+    if (exceptions.length < this.damonjs.exceptions.max) {
+      this.emit(Events.PlayerException, this, data);
+      exceptions.push(now);
+      this.errors.exceptionData.exceptions = exceptions;
+    } else {
+      this.emit(Events.Debug, this, `Player ${this.guildId} hit the max exceptions limit`);
+    }
+  }
+
+  private async handleTrackStuck(data: TrackStuckEvent) {
+    const now = Date.now();
+
+    this.errors.stuckData.lastStuckTime = now;
+    this.isTrackPlaying = false;
+
+    const maxTime = this.damonjs.stuck.time;
+    const stucks = this.errors.stuckData.stucks.filter((time: number) => now - time < maxTime);
+
+    if (stucks.length < this.damonjs.stuck.max) {
+      this.emit(Events.PlayerStuck, this, data);
+      stucks.push(now);
+      this.errors.stuckData.stucks = stucks;
+    } else {
+      this.emit(Events.Debug, this, `Player ${this.guildId} hit the max stuck limit`);
+    }
+  }
+
+  private async handleResolveError(current: DamonJsTrack, resolveResult: Error) {
+    const now = Date.now();
+
+    this.errors.resolveErrorData.lastResolveErrorTime = now;
+    this.isTrackPlaying = false;
+
+    const maxTime = this.damonjs.resolveError.time;
+    const resolveErrors = this.errors.resolveErrorData.resolveErrors.filter((time: number) => now - time < maxTime);
+
+    if (resolveErrors.length < this.damonjs.resolveError.max) {
+      this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
+      resolveErrors.push(now);
+      this.errors.resolveErrorData.resolveErrors = resolveErrors;
+    } else {
+      this.emit(Events.Debug, this, `Player ${this.guildId} hit the max resolve error limit`);
+    }
   }
 
   /**

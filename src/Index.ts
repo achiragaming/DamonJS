@@ -8,4 +8,4 @@ export * from './DamonJs';
 export { DamonJsTrack, DamonJsQueue, DamonJsPlayer, Plugins };
 export * from './Modules/Interfaces';
 
-export const version = '1.7.8';
+export const version = '1.7.89';

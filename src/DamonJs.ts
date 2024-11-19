@@ -41,8 +41,21 @@ export class DamonJs extends EventEmitter {
   /** Shoukaku instance */
   public shoukaku: Shoukaku;
   /** DamonJs players */
-  public readonly players: Map<string, DamonJsPlayer>;
 
+  public readonly players: Map<string, DamonJsPlayer>;
+  public exceptions: {
+    max: number;
+    time: number;
+  };
+  /** Stuck config until skip stops */
+  public stuck: {
+    max: number;
+    time: number;
+  };
+  public resolveError: {
+    max: number;
+    time: number;
+  };
   /**
    * Initialize a DamonJs instance.
    * @param DamonJsOptions DamonJsOptions
@@ -54,9 +67,13 @@ export class DamonJs extends EventEmitter {
     super();
 
     this.shoukaku = shoukaku;
-    if (this.DamonJsOptions.skipOnException === undefined) this.DamonJsOptions.skipOnException = true;
-    if (this.DamonJsOptions.skipOnStuck === undefined) this.DamonJsOptions.skipOnStuck = true;
-    if (this.DamonJsOptions.skipResolveError === undefined) this.DamonJsOptions.skipResolveError = true;
+  
+    this.exceptions = this.DamonJsOptions.exceptions ? this.DamonJsOptions.exceptions : { max: 3, time: 30 * 1000 };
+    this.stuck = this.DamonJsOptions.stuck ? this.DamonJsOptions.stuck : { max: 3, time: 30 * 1000 };
+    this.resolveError = this.DamonJsOptions.resolveError
+      ? this.DamonJsOptions.resolveError
+      : { max: 3, time: 30 * 1000 };
+
     if (this.DamonJsOptions.plugins) {
       for (const [, plugin] of this.DamonJsOptions.plugins.entries()) {
         if (plugin.constructor.name !== 'DamonJsPlugin')
@@ -67,7 +84,6 @@ export class DamonJs extends EventEmitter {
     this.shoukaku.joinVoiceChannel = this.joinVoiceChannel.bind(this);
     this.players = new Map<string, DamonJsPlayer>();
   }
-
 
   public on<K extends keyof DamonJsEvents>(event: K, listener: (...args: DamonJsEvents[K]) => void): this {
     super.on(event as string, (...args: any) => listener(...args));
