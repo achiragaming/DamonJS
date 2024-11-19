@@ -51,10 +51,10 @@ export class DamonJsTrack {
   /** International Standard Recording Code */
   public isrc: string | undefined;
   public resolvedBySource: boolean = false;
-
+  public readonly data: Map<string, any>;
   constructor(raw: RawTrack, requester: unknown) {
     this.damonjs = undefined;
-
+    this.data = new Map();
     this.encoded = raw.encoded;
     this.sourceName = raw.info.sourceName;
     this.title = raw.info.title;

@@ -52,6 +52,7 @@ export class DamonJsPlayer {
   public readonly data: Map<string, any>;
   public search: (query: string, options: DamonJsSearchOptions) => Promise<DamonJsSearchResult>;
   public readonly errors: {
+    trackendSpamData: { trackEnds: number[]; lastTrackEndTime: number };
     exceptionData: { exceptions: number[]; lastExceptionTime: number };
     stuckData: { stucks: number[]; lastStuckTime: number };
     resolveErrorData: { resolveErrors: number[]; lastResolveErrorTime: number };
@@ -73,6 +74,7 @@ export class DamonJsPlayer {
     this.data = new Map(options.data);
     this.textId = this.options.textId;
     this.errors = {
+      trackendSpamData: { trackEnds: [], lastTrackEndTime: 0 },
       exceptionData: { exceptions: [], lastExceptionTime: 0 },
       stuckData: { lastStuckTime: 0, stucks: [] },
       resolveErrorData: { resolveErrors: [], lastResolveErrorTime: 0 },
@@ -142,13 +144,25 @@ export class DamonJsPlayer {
   }
   private async handleTrackEnd(data: TrackEndEvent) {
     return await this.withLock('trackEnd', async () => {
+      if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
       if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
         return this.emit(Events.Debug, this, `Player ${this.guildId} destroyed from end event`);
       }
-      if (!this.queue.current) return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
-      this.isTrackPlaying = false;
-      this.emit(Events.PlayerEnd, this, this.queue.current);
-      await this.skip().catch(() => null);
+      const now = Date.now();
+
+      const maxTime = this.damonjs.trackEndSpam.time;
+      const trackEnds = this.errors.trackendSpamData.trackEnds.filter((time: number) => now - time < maxTime);
+
+      if (trackEnds.length < this.damonjs.trackEndSpam.max) {
+        this.errors.trackendSpamData.lastTrackEndTime = now;
+        this.isTrackPlaying = false;
+
+        this.emit(Events.PlayerEnd, this, this.queue.current, data);
+        trackEnds.push(now);
+        this.errors.trackendSpamData.trackEnds = trackEnds;
+      } else {
+        this.emit(Events.Debug, this, `Player ${this.guildId} hit the max trackends limit`);
+      }
     });
   }
   private async handlePlayerEmpty() {
