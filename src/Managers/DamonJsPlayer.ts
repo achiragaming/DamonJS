@@ -192,7 +192,7 @@ export class DamonJsPlayer {
       this.emit(Events.PlayerEnd, this, this.queue.current, data);
     }
 
-    return this.lockAction('trackEnd', async () => {
+    return this.lockAction('player-end-actions', async () => {
       const now = Date.now();
       const { shouldDestroy, shouldCooldown } = this.handleErrorTracking('trackEnd', now);
 
@@ -218,7 +218,7 @@ export class DamonJsPlayer {
       this.isTrackPlaying = false;
       this.emit(Events.PlayerException, this, this.queue.current, data);
     }
-    return this.lockAction('exception', async () => {
+    return this.lockAction('player-end-actions', async () => {
       const now = Date.now();
       const { shouldDestroy, shouldCooldown } = this.handleErrorTracking('exception', now);
 
@@ -244,7 +244,7 @@ export class DamonJsPlayer {
       this.isTrackPlaying = false;
       this.emit(Events.PlayerStuck, this, this.queue.current, data);
     }
-    return this.lockAction('stuck', async () => {
+    return this.lockAction('player-end-actions', async () => {
       const now = Date.now();
       const { shouldDestroy, shouldCooldown } = this.handleErrorTracking('stuck', now);
 
@@ -270,7 +270,7 @@ export class DamonJsPlayer {
       this.isTrackPlaying = false;
       this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
     }
-    return this.lockAction('resolveError', async () => {
+    return this.lockAction('player-end-actions', async () => {
       const now = Date.now();
       const { shouldDestroy, shouldCooldown } = this.handleErrorTracking('resolveError', now);
 
@@ -290,7 +290,18 @@ export class DamonJsPlayer {
       }
     });
   }
-
+  private async handlePlayerDestroy() {
+    if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
+      throw new DamonJsError(1, 'Player is already destroyed');
+    }
+    this.state = PlayerState.DESTROYING;
+    await this.shoukaku.leaveVoiceChannel(this.guildId);
+    this.damonjs.players.delete(this.guildId);
+    this.state = PlayerState.DESTROYED;
+    this.emit(Events.PlayerDestroy, this, this.queue.current);
+    this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
+    return this;
+  }
   private async handleTrackStart() {
     if (!this.queue.current) {
       return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
@@ -321,21 +332,6 @@ export class DamonJsPlayer {
     }
     this.queue.current.position = data.state.position || 0;
     this.emit(Events.PlayerUpdate, this, this.queue.current, data);
-  }
-
-  private async handlePlayerDestroy() {
-    return this.lockAction('playerDestroy', async () => {
-      if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
-        throw new DamonJsError(1, 'Player is already destroyed');
-      }
-      this.state = PlayerState.DESTROYING;
-      await this.shoukaku.leaveVoiceChannel(this.guildId);
-      this.damonjs.players.delete(this.guildId);
-      this.state = PlayerState.DESTROYED;
-      this.emit(Events.PlayerDestroy, this, this.queue.current);
-      this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
-      return this;
-    });
   }
 
   private isInCooldown(): boolean {
