@@ -57,6 +57,7 @@ export class DamonJsPlayer {
     stuckData: { stucks: number[]; destroyTriggers: number[]; lastStuckTime: number };
     resolveErrorData: { resolveErrors: number[]; destroyTriggers: number[]; lastResolveErrorTime: number };
   };
+  public readonly cooldowns: { trackEnd: boolean; exception: boolean; stuck: boolean; resolveError: boolean };
 
   constructor(
     damonjs: DamonJs,
@@ -78,6 +79,12 @@ export class DamonJsPlayer {
       exceptionData: { exceptions: [], destroyTriggers: [], lastExceptionTime: 0 },
       stuckData: { lastStuckTime: 0, destroyTriggers: [], stucks: [] },
       resolveErrorData: { resolveErrors: [], destroyTriggers: [], lastResolveErrorTime: 0 },
+    };
+    this.cooldowns = {
+      trackEnd: false,
+      exception: false,
+      stuck: false,
+      resolveError: false,
     };
     this.search = (query, searchOptions) => this.damonjs.search(query, searchOptions, this);
     this.isTrackPlaying = false;
@@ -183,6 +190,7 @@ export class DamonJsPlayer {
       );
 
       if (trackEnds.length >= this.damonjs.trackEndSpam.rule.maxhits) {
+        this.cooldowns.trackEnd = true;
         destroyTriggers.push(now);
         this.errors.trackendSpamData.trackEnds = [];
         if (destroyTriggers.length >= this.damonjs.trackEndSpam.destroy.maxhits) {
@@ -191,6 +199,7 @@ export class DamonJsPlayer {
         }
 
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.trackEndSpam.rule.cooldown));
+        this.cooldowns.trackEnd = false;
       }
 
       trackEnds.push(now);
@@ -215,6 +224,7 @@ export class DamonJsPlayer {
       );
 
       if (exceptions.length >= this.damonjs.exceptions.rule.maxhits) {
+        this.cooldowns.exception = true;
         destroyTriggers.push(now);
         this.errors.exceptionData.exceptions = [];
         if (destroyTriggers.length >= this.damonjs.exceptions.destroy.maxhits) {
@@ -223,6 +233,7 @@ export class DamonJsPlayer {
         }
 
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.exceptions.rule.cooldown));
+        this.cooldowns.exception = false;
       }
 
       exceptions.push(now);
@@ -243,6 +254,7 @@ export class DamonJsPlayer {
       );
 
       if (stucks.length >= this.damonjs.stuck.rule.maxhits) {
+        this.cooldowns.stuck = true;
         destroyTriggers.push(now);
         this.errors.stuckData.stucks = [];
         if (destroyTriggers.length >= this.damonjs.stuck.destroy.maxhits) {
@@ -250,6 +262,7 @@ export class DamonJsPlayer {
           return;
         }
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.stuck.rule.cooldown));
+        this.cooldowns.stuck = false;
       }
 
       stucks.push(now);
@@ -272,6 +285,7 @@ export class DamonJsPlayer {
       );
 
       if (resolveErrors.length >= this.damonjs.resolveError.rule.maxhits) {
+        this.cooldowns.resolveError = true;
         destroyTriggers.push(now);
         this.errors.resolveErrorData.resolveErrors = [];
         if (destroyTriggers.length >= this.damonjs.resolveError.destroy.maxhits) {
@@ -279,6 +293,7 @@ export class DamonJsPlayer {
           return;
         }
         await new Promise((resolve) => setTimeout(resolve, this.damonjs.resolveError.rule.cooldown));
+        this.cooldowns.resolveError = false;
       }
 
       resolveErrors.push(now);
@@ -309,13 +324,7 @@ export class DamonJsPlayer {
     });
   }
   private isInCooldown(): boolean {
-    const now = Date.now();
-    return (
-      now - this.errors.trackendSpamData.lastTrackEndTime < this.damonjs.trackEndSpam.rule.cooldown ||
-      now - this.errors.exceptionData.lastExceptionTime < this.damonjs.exceptions.rule.cooldown ||
-      now - this.errors.stuckData.lastStuckTime < this.damonjs.stuck.rule.cooldown ||
-      now - this.errors.resolveErrorData.lastResolveErrorTime < this.damonjs.resolveError.rule.cooldown
-    );
+    return this.cooldowns.exception || this.cooldowns.stuck || this.cooldowns.resolveError || this.cooldowns.trackEnd;
   }
   /**
    * Get GuildId
