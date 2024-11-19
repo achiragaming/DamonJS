@@ -1,4 +1,4 @@
-import { DamonJs, Events } from '../Index';
+import { DamonJs, Events } from '../../Index';
 import { PlayerMovedState, DamonJsPlugin as Plugin } from '../Modules/Interfaces';
 
 export class DamonJsPlugin extends Plugin {

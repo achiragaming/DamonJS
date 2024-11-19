@@ -13,6 +13,6 @@
   "rules": {
     "unified-signatures": false
   },
-  "include": ["src"],
+  "include": ["src", "Index.ts"],
   "exclude": ["node_modules", "**/__tests__/*", "test", "node_modules/**", "test/**", "/node_modules/", "examples"]
 }

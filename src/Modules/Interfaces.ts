@@ -1,5 +1,5 @@
 import { DamonJs } from '../DamonJs';
-import { DamonJsPlayer, DamonJsQueue } from '../Index';
+import { DamonJsPlayer, DamonJsQueue } from '../../Index';
 import { DamonJsTrack } from '../Managers/Supports/DamonJsTrack';
 import {
   PlayerUpdate,
