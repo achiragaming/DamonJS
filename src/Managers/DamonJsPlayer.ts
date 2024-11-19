@@ -145,13 +145,12 @@ export class DamonJsPlayer {
   private async handleTrackException(data: TrackExceptionEvent) {
     const now = Date.now();
 
-    this.errors.exceptionData.lastExceptionTime = now;
-    this.isTrackPlaying = false;
-
     const maxTime = this.damonjs.exceptions.time;
     const exceptions = this.errors.exceptionData.exceptions.filter((time: number) => now - time < maxTime);
 
     if (exceptions.length < this.damonjs.exceptions.max) {
+      this.errors.exceptionData.lastExceptionTime = now;
+      this.isTrackPlaying = false;
       this.emit(Events.PlayerException, this, data);
       exceptions.push(now);
       this.errors.exceptionData.exceptions = exceptions;
@@ -163,13 +162,12 @@ export class DamonJsPlayer {
   private async handleTrackStuck(data: TrackStuckEvent) {
     const now = Date.now();
 
-    this.errors.stuckData.lastStuckTime = now;
-    this.isTrackPlaying = false;
-
     const maxTime = this.damonjs.stuck.time;
     const stucks = this.errors.stuckData.stucks.filter((time: number) => now - time < maxTime);
 
     if (stucks.length < this.damonjs.stuck.max) {
+      this.errors.stuckData.lastStuckTime = now;
+      this.isTrackPlaying = false;
       this.emit(Events.PlayerStuck, this, data);
       stucks.push(now);
       this.errors.stuckData.stucks = stucks;
@@ -181,13 +179,12 @@ export class DamonJsPlayer {
   private async handleResolveError(current: DamonJsTrack, resolveResult: Error) {
     const now = Date.now();
 
-    this.errors.resolveErrorData.lastResolveErrorTime = now;
-    this.isTrackPlaying = false;
-
     const maxTime = this.damonjs.resolveError.time;
     const resolveErrors = this.errors.resolveErrorData.resolveErrors.filter((time: number) => now - time < maxTime);
 
     if (resolveErrors.length < this.damonjs.resolveError.max) {
+      this.errors.resolveErrorData.lastResolveErrorTime = now;
+      this.isTrackPlaying = false;
       this.emit(Events.PlayerResolveError, this, current, resolveResult.message);
       resolveErrors.push(now);
       this.errors.resolveErrorData.resolveErrors = resolveErrors;
