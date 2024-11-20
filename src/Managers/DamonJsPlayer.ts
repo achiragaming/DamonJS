@@ -83,18 +83,26 @@ export class DamonJsPlayer {
     const existingLock = Array.from(this.lockMap.keys()).find((existingKey) => key.startsWith(existingKey));
 
     if (existingLock) {
-      await this.lockMap.get(existingLock);
+      try {
+        await this.lockMap.get(existingLock);
+      } catch (error) {
+        // Continue even if previous lock had an error
+      }
     }
 
     const lockPromise = operation();
+
     this.lockMap.set(key, lockPromise);
 
     try {
       return await lockPromise;
+    } catch (error) {
+      throw error;
     } finally {
       this.lockMap.delete(key);
     }
   }
+
   public async init() {
     if (this.state === PlayerState.CONNECTED)
       throw new DamonJsError(1, 'Player is already initialized or initializing');
@@ -394,22 +402,21 @@ export class DamonJsPlayer {
           throw new DamonJsError(1, 'No track is available to play');
         }
         this.queue.current = currentTrack;
-        const current = this.queue.current;
 
-        current.setDamonJs(this.damonjs);
-        const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
+        currentTrack.setDamonJs(this.damonjs);
+        const resolveResult = await currentTrack.resolve({ player: this }).catch((e: Error) => e);
         if (resolveResult instanceof Error) {
           this.playerEvents.emit('resolveError', resolveResult);
-          throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${resolveResult.message}`);
+          throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${resolveResult.message}-${currentTrack}`);
         }
 
-        let playOptions = { track: { encoded: current.encoded, userData: current.requester ?? {} } };
+        let playOptions = { track: { encoded: currentTrack.encoded, userData: currentTrack.requester ?? {} } };
         if (options) playOptions = { ...playOptions, ...options };
 
         const playerResult = await this.player.playTrack(playOptions).catch((e: Error) => e);
         if (playerResult instanceof Error) {
           this.playerEvents.emit('resolveError', playerResult);
-          throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${playerResult.message}`);
+          throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${playerResult.message}-${currentTrack}`);
         }
       }
       return this;
@@ -481,7 +488,7 @@ export class DamonJsPlayer {
       this.queue.currentId = this.queue.length - 1;
     }
 
-    await this.play().catch((e: Error) => e);
+    await this.play().catch((e: Error) => this.emit(Events.Debug, this, e.message));
 
     return this;
   }
