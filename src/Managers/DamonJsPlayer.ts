@@ -36,6 +36,7 @@ import {
 } from '../Modules/Interfaces';
 import { DamonJsTrack } from './Supports/DamonJsTrack';
 import { Snowflake } from 'discord.js';
+import EventEmitter from 'events';
 
 export class DamonJsPlayer {
   private options: DamonJsPlayerOptions;
@@ -54,6 +55,7 @@ export class DamonJsPlayer {
   public readonly stats: {
     playAttemptData: { playAttempts: number[]; destroyTriggers: number[]; lastPlayTime: number };
   };
+  playerEvents: EventEmitter;
 
   constructor(
     damonjs: DamonJs,
@@ -65,6 +67,7 @@ export class DamonJsPlayer {
     this.options = options;
     this.damonjs = damonjs;
     this.player = player;
+    this.playerEvents = new EventEmitter();
     this.connection = connection;
     this.shoukaku = shoukaku;
     this.queue = new DamonJsQueue(this);
@@ -123,15 +126,30 @@ export class DamonJsPlayer {
       resumed: async () => {
         await this.handleTrackResumed();
       },
+      empty: async () => {
+        await this.handlePlayerEmpty();
+      },
+      resolveError: async (resolveResult: Error) => {
+        await this.handleResolveError(resolveResult);
+      },
     };
 
-    this.player.on('start', eventHandlers.start);
-    this.player.on('end', eventHandlers.end);
-    this.player.on('closed', eventHandlers.closed);
-    this.player.on('exception', eventHandlers.exception);
-    this.player.on('update', eventHandlers.update);
-    this.player.on('stuck', eventHandlers.stuck);
-    this.player.on('resumed', eventHandlers.resumed);
+    this.playerEvents.on('start', eventHandlers.start);
+    this.playerEvents.on('end', eventHandlers.end);
+    this.playerEvents.on('closed', eventHandlers.closed);
+    this.playerEvents.on('exception', eventHandlers.exception);
+    this.playerEvents.on('update', eventHandlers.update);
+    this.playerEvents.on('stuck', eventHandlers.stuck);
+    this.playerEvents.on('resolveError', eventHandlers.resolveError);
+    this.playerEvents.on('empty', eventHandlers.empty);
+
+    this.player.on('start', (data) => this.playerEvents.emit('start', data));
+    this.player.on('end', (data) => this.playerEvents.emit('end', data));
+    this.player.on('closed', (data) => this.playerEvents.emit('closed', data));
+    this.player.on('exception', (data) => this.playerEvents.emit('exception', data));
+    this.player.on('update', (data) => this.playerEvents.emit('update', data));
+    this.player.on('stuck', (data) => this.playerEvents.emit('stuck', data));
+    this.player.on('resumed', () => this.playerEvents.emit('resumed'));
   }
 
   private async handleTrackEnd(data: TrackEndEvent) {
@@ -372,7 +390,7 @@ export class DamonJsPlayer {
       } else {
         const currentTrack = this.queue.at(this.queue.currentId);
         if (!currentTrack) {
-          await this.handlePlayerEmpty();
+          this.playerEvents.emit('empty');
           throw new DamonJsError(1, 'No track is available to play');
         }
         this.queue.current = currentTrack;
@@ -381,7 +399,7 @@ export class DamonJsPlayer {
         current.setDamonJs(this.damonjs);
         const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
         if (resolveResult instanceof Error) {
-          await this.handleResolveError(resolveResult);
+          this.playerEvents.emit('resolveError', resolveResult);
           throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${resolveResult.message}`);
         }
 
@@ -390,7 +408,7 @@ export class DamonJsPlayer {
 
         const playerResult = await this.player.playTrack(playOptions).catch((e: Error) => e);
         if (playerResult instanceof Error) {
-          await this.handleResolveError(playerResult);
+          this.playerEvents.emit('resolveError', playerResult);
           throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${playerResult.message}`);
         }
       }
