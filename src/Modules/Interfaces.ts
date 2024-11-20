@@ -14,8 +14,8 @@ import { Snowflake } from 'discord.js';
 export interface DamonJsOptions {
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
-  /** TrackEnd spam config until skip stops */
-  trackEndSpam?: {
+  /** play spam config until destroys */
+  playSpam?: {
     rule: {
       maxhits: number;
       timeFrame: number;
@@ -25,46 +25,20 @@ export interface DamonJsOptions {
       timeFrame: number;
       maxhits: number;
     };
+  };
+  trackEnd?: {
     skip: boolean;
   };
-  /** Exception config until skip stops */
-  exceptions?: {
-    rule: {
-      maxhits: number;
-      timeFrame: number;
-      cooldown: number;
-    };
-    destroy: {
-      timeFrame: number;
-      maxhits: number;
-    };
+  trackException?: {
     skip: boolean;
   };
-  /** Stuck config until skip stops */
-  stuck?: {
-    rule: {
-      maxhits: number;
-      timeFrame: number;
-      cooldown: number;
-    };
-    destroy: {
-      timeFrame: number;
-      maxhits: number;
-    };
+  trackStuck?: {
     skip: boolean;
   };
-  resolveError?: {
-    rule: {
-      maxhits: number;
-      timeFrame: number;
-      cooldown: number;
-    };
-    destroy: {
-      timeFrame: number;
-      maxhits: number;
-    };
+  trackResolveError?: {
     skip: boolean;
   };
+
   /** DamonJs plugins */
   plugins?: DamonJsPlugin[];
   /** Source that will be forced to resolve when playing it */
@@ -164,7 +138,7 @@ export interface DamonJsEvents {
   playerEmpty: [player: DamonJsPlayer, track?: DamonJsTrack];
   playerClosed: [player: DamonJsPlayer, data: WebSocketClosedEvent];
   playerUpdate: [player: DamonJsPlayer, track: DamonJsTrack, data: PlayerUpdate];
-  playerException: [player: DamonJsPlayer, track: DamonJsTrack,data: TrackExceptionEvent];
+  playerException: [player: DamonJsPlayer, track: DamonJsTrack, data: TrackExceptionEvent];
   playerResumed: [player: DamonJsPlayer];
   playerStuck: [player: DamonJsPlayer, track: DamonJsTrack, data: TrackStuckEvent];
   playerResolveError: [player: DamonJsPlayer, track: DamonJsTrack, message?: string];

@@ -43,7 +43,7 @@ export class DamonJs extends EventEmitter {
   /** DamonJs players */
 
   public readonly players: Map<string, DamonJsPlayer>;
-  public exceptions: {
+  public playSpam: {
     rule: {
       maxhits: number;
       timeFrame: number;
@@ -53,45 +53,21 @@ export class DamonJs extends EventEmitter {
       timeFrame: number;
       maxhits: number;
     };
+  };
+
+  public trackEnd: {
     skip: boolean;
   };
-  public trackEndSpam: {
-    rule: {
-      maxhits: number;
-      timeFrame: number;
-      cooldown: number;
-    };
-    destroy: {
-      timeFrame: number;
-      maxhits: number;
-    };
+  public trackException: {
     skip: boolean;
   };
-  /** Stuck config until skip stops */
-  public stuck: {
-    rule: {
-      maxhits: number;
-      timeFrame: number;
-      cooldown: number;
-    };
-    destroy: {
-      timeFrame: number;
-      maxhits: number;
-    };
+  public trackStuck: {
     skip: boolean;
   };
-  public resolveError: {
-    rule: {
-      maxhits: number;
-      timeFrame: number;
-      cooldown: number;
-    };
-    destroy: {
-      timeFrame: number;
-      maxhits: number;
-    };
+  public trackResolveError: {
     skip: boolean;
   };
+
 
   /**
    * Initialize a DamonJs instance.
@@ -105,34 +81,17 @@ export class DamonJs extends EventEmitter {
 
     this.shoukaku = shoukaku;
 
-    this.exceptions = this.DamonJsOptions.exceptions
-      ? this.DamonJsOptions.exceptions
+    this.playSpam = this.DamonJsOptions.playSpam
+      ? this.DamonJsOptions.playSpam
       : {
           rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },
-          skip: true,
         };
-    this.stuck = this.DamonJsOptions.stuck
-      ? this.DamonJsOptions.stuck
-      : {
-          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
-          destroy: { maxhits: 4, timeFrame: 30 * 1000 },
-          skip: true,
-        };
-    this.trackEndSpam = this.DamonJsOptions.trackEndSpam
-      ? this.DamonJsOptions.trackEndSpam
-      : {
-          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
-          destroy: { maxhits: 4, timeFrame: 30 * 1000 },
-          skip: true,
-        };
-    this.resolveError = this.DamonJsOptions.resolveError
-      ? this.DamonJsOptions.resolveError
-      : {
-          rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
-          destroy: { maxhits: 4, timeFrame: 30 * 1000 },
-          skip: true,
-        };
+    this.trackEnd = this.DamonJsOptions.trackEnd ? this.DamonJsOptions.trackEnd : { skip: true };
+    this.trackException = this.DamonJsOptions.trackException ? this.DamonJsOptions.trackException : { skip: true };
+    this.trackStuck = this.DamonJsOptions.trackStuck ? this.DamonJsOptions.trackStuck : { skip: true };
+    this.trackResolveError = this.DamonJsOptions.trackResolveError ? this.DamonJsOptions.trackResolveError : { skip: true };
+
 
     if (this.DamonJsOptions.plugins) {
       for (const [, plugin] of this.DamonJsOptions.plugins.entries()) {
