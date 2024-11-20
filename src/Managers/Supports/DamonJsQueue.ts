@@ -14,7 +14,8 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
   public get size() {
     return this.length;
   }
-
+  private _current: DamonJsTrack | undefined;
+  
   /** Get the size of queue including current */
   public get totalSize(): number {
     return this.length + (this.current ? 1 : 0);
@@ -38,11 +39,21 @@ export class DamonJsQueue extends Array<DamonJsTrack> {
    */
   public currentId: number = 0;
   /** Current playing track */
+  
   public get current(): DamonJsTrack | undefined {
-    return this.at(this.currentId);
+    return this._current;
   }
   public get lastTrack(): DamonJsTrack | undefined {
     return this.at(this.length - 1);
+  }
+    /**
+   * set current track of the queue
+   * @param track DamonJsTrack to add
+   * @returns DamonJsQueue
+   */
+  public set current(track: DamonJsTrack | undefined) {
+    this._current = track;
+    this.player.emit(Events.InitQueue, this.player);
   }
   /**
    * Add track(s) to the queue

@@ -463,10 +463,12 @@ export class DamonJsPlayer {
       this.queue.currentId--;
       await this.stopTrack();
     } else {
-      if (!this.queue.current) {
+      const currentTrack = this.queue.at(this.queue.currentId);
+      if (!currentTrack) {
         await this.handlePlayerEmpty();
         throw new DamonJsError(1, 'No track is available to play');
       }
+      this.queue.current = currentTrack;
       const current = this.queue.current;
       current.setDamonJs(this.damonjs);
       const resolveResult = await current.resolve({ player: this }).catch((e: Error) => e);
