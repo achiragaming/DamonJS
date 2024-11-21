@@ -180,32 +180,55 @@ export class DamonJsTrack {
     }
     return this;
   }
+  private getTrackScore(track: any): number {
+    let score = 0;
+    const title = track.info.title.toLowerCase();
+    const author = track.info.author.toLowerCase();
+
+    // Prefer "Topic" channels
+    if (author.includes('- topic')) score += 3;
+    
+    // Lower score for music videos
+    if (title.includes('official video') || 
+        title.includes('music video') || 
+        title.includes('official mv') ||
+        title.includes('(video)') ||
+        title.includes('[video]')) {
+        score -= 2;
+    }
+
+    // Prefer "audio" tracks
+    if (title.includes('audio') || title.includes('lyric')) score += 1;
+
+    return score;
+}
   private async getTrack(player: DamonJsPlayer, source: any): Promise<Track> {
     if (!this.damonjs) throw new DamonJsError(1, 'DamonJs is not set');
     const query = [this.author, this.title].filter((x) => !!x).join(' - ');
     const result = await player.search(`${query}`, { requester: this.requester, engine: source });
     if (!result || !result.tracks.length) throw new DamonJsError(2, 'No results found');
     const rawTracks = result.tracks.map((x) => x.getRaw()._raw);
+    // Filter out preview tracks
+    const filteredTracks = rawTracks.filter((track) => {
+      // Filter out SoundCloud previews
+      if (track.info.sourceName === 'soundcloud' && track.info.identifier.includes('/preview/')) {
+        return false;
+      }
+      // Add more platform-specific preview checks here as needed
+      return true;
+    });
 
-    if (this.author) {
-      const author = [this.author, `${this.author} - Topic`];
-      const officialTrack = rawTracks.find(
-        (track) =>
-          author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, 'i').test(track.info.author)) ||
-          new RegExp(`^${escapeRegExp(this.title)}$`, 'i').test(track.info.title),
-      );
-      if (officialTrack) return officialTrack;
-    }
-    if (this.length) {
-      const sameDuration = rawTracks.find(
-        (track) =>
-          track.info.length >= (this.length ? this.length : 0) - 2000 &&
-          track.info.length <= (this.length ? this.length : 0) + 2000,
-      );
-      if (sameDuration) return sameDuration;
-    }
+    if (!filteredTracks.length) throw new DamonJsError(2, 'No non-preview tracks found');
 
-    return rawTracks[0];
- 
+    const sortedTracks = filteredTracks.sort((a, b) => {
+      if (a.info.sourceName === 'youtube') {
+          // Prioritize "Topic" channels and tracks without "Official Video" in title
+          const aScore = this.getTrackScore(a);
+          const bScore = this.getTrackScore(b);
+          return bScore - aScore;
+      }
+      return 0;
+  });
+    return sortedTracks[0];
   }
 }

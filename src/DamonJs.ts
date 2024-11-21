@@ -67,6 +67,7 @@ export class DamonJs extends EventEmitter {
   public trackResolveError: {
     skip: boolean;
   };
+  
 
   /**
    * Initialize a DamonJs instance.
