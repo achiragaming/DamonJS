@@ -180,28 +180,45 @@ export class DamonJsTrack {
     }
     return this;
   }
-  private getTrackScore(track: any): number {
+  private getTrackScore(track: Track): number {
     let score = 0;
     const title = track.info.title.toLowerCase();
     const author = track.info.author.toLowerCase();
 
-    // Prefer "Topic" channels
-    if (author.includes('- topic')) score += 3;
-    
-    // Lower score for music videos
-    if (title.includes('official video') || 
-        title.includes('music video') || 
+    if (track.info.sourceName === 'youtube') {
+      // Prefer "Topic" channels
+      if (author.includes('- topic')) score += 3;
+
+      // Lower score for music videos
+      if (
+        title.includes('official video') ||
+        title.includes('music video') ||
         title.includes('official mv') ||
         title.includes('(video)') ||
-        title.includes('[video]')) {
+        title.includes('[video]')
+      ) {
         score -= 2;
+      }
+
+      // Prefer "audio" tracks
+      if (title.includes('audio') || title.includes('lyric')) score += 1;
+    } else if (track.info.sourceName === 'soundcloud') {
+      // Prefer "audio" tracks
+      if (author.includes('official')) score += 2;
+      if (title.includes('original mix')) score += 3;
+      if (title.includes('remix')) score -= 1;
+      if (title.includes('repost')) score -= 2;
+      if (title.includes('cover')) score -= 1;
     }
 
-    // Prefer "audio" tracks
-    if (title.includes('audio') || title.includes('lyric')) score += 1;
-
     return score;
-}
+  }
+  private filterPlayableTrack(track: Track): boolean {
+    if (track.info.sourceName === 'soundcloud' && track.info.identifier.includes('/preview/')) {
+      return false;
+    }
+    return true;
+  }
   private async getTrack(player: DamonJsPlayer, source: any): Promise<Track> {
     if (!this.damonjs) throw new DamonJsError(1, 'DamonJs is not set');
     const query = [this.author, this.title].filter((x) => !!x).join(' - ');
@@ -209,26 +226,16 @@ export class DamonJsTrack {
     if (!result || !result.tracks.length) throw new DamonJsError(2, 'No results found');
     const rawTracks = result.tracks.map((x) => x.getRaw()._raw);
     // Filter out preview tracks
-    const filteredTracks = rawTracks.filter((track) => {
-      // Filter out SoundCloud previews
-      if (track.info.sourceName === 'soundcloud' && track.info.identifier.includes('/preview/')) {
-        return false;
-      }
-      // Add more platform-specific preview checks here as needed
-      return true;
-    });
+    const filteredTracks = rawTracks.filter((track) => this.filterPlayableTrack(track));
 
     if (!filteredTracks.length) throw new DamonJsError(2, 'No non-preview tracks found');
 
     const sortedTracks = filteredTracks.sort((a, b) => {
-      if (a.info.sourceName === 'youtube') {
-          // Prioritize "Topic" channels and tracks without "Official Video" in title
-          const aScore = this.getTrackScore(a);
-          const bScore = this.getTrackScore(b);
-          return bScore - aScore;
-      }
-      return 0;
-  });
+      // Prioritize "Topic" channels and tracks without "Official Video" in title
+      const aScore = this.getTrackScore(a);
+      const bScore = this.getTrackScore(b);
+      return bScore - aScore;
+    });
     return sortedTracks[0];
   }
 }
