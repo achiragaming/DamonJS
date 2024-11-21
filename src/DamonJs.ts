@@ -68,7 +68,6 @@ export class DamonJs extends EventEmitter {
     skip: boolean;
   };
 
-
   /**
    * Initialize a DamonJs instance.
    * @param DamonJsOptions DamonJsOptions
@@ -90,8 +89,9 @@ export class DamonJs extends EventEmitter {
     this.trackEnd = this.DamonJsOptions.trackEnd ? this.DamonJsOptions.trackEnd : { skip: true };
     this.trackException = this.DamonJsOptions.trackException ? this.DamonJsOptions.trackException : { skip: true };
     this.trackStuck = this.DamonJsOptions.trackStuck ? this.DamonJsOptions.trackStuck : { skip: true };
-    this.trackResolveError = this.DamonJsOptions.trackResolveError ? this.DamonJsOptions.trackResolveError : { skip: true };
-
+    this.trackResolveError = this.DamonJsOptions.trackResolveError
+      ? this.DamonJsOptions.trackResolveError
+      : { skip: true };
 
     if (this.DamonJsOptions.plugins) {
       for (const [, plugin] of this.DamonJsOptions.plugins.entries()) {
@@ -201,13 +201,12 @@ export class DamonJs extends EventEmitter {
     const isUrl = /^https?:\/\/.*/.test(query);
     const node = player ? player.node : await this.getLeastUsedNode().catch((_) => null);
     if (!node) throw new DamonJsError(2, 'No nodes are online');
-    const result = player
-      ? await node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null)
-      : await node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
-
+    const result = await node.rest.resolve(!isUrl ? `${source}search:${query}` : query).catch((_) => null);
+ 
     if (result?.loadType === LoadType.TRACK && result.data) {
       return this.buildSearch(undefined, [new DamonJsTrack(result.data, options.requester)], SearchResultTypes.Track);
     } else if (result?.loadType === LoadType.PLAYLIST && result.data.tracks.length) {
+    
       return this.buildSearch(
         result.data,
         result.data.tracks.map((track) => new DamonJsTrack(track, options.requester)),

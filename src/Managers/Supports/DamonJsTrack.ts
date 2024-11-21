@@ -185,7 +185,27 @@ export class DamonJsTrack {
     const query = [this.author, this.title].filter((x) => !!x).join(' - ');
     const result = await player.search(`${query}`, { requester: this.requester, engine: source });
     if (!result || !result.tracks.length) throw new DamonJsError(2, 'No results found');
-    const shoukakUTracks = result.tracks.map((track) => DamonJsUtils.convertDamonJsTrackToTrack(track));
-    return shoukakUTracks[0];
+    const rawTracks = result.tracks.map((x) => x.getRaw()._raw);
+
+    if (this.author) {
+      const author = [this.author, `${this.author} - Topic`];
+      const officialTrack = rawTracks.find(
+        (track) =>
+          author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, 'i').test(track.info.author)) ||
+          new RegExp(`^${escapeRegExp(this.title)}$`, 'i').test(track.info.title),
+      );
+      if (officialTrack) return officialTrack;
+    }
+    if (this.length) {
+      const sameDuration = rawTracks.find(
+        (track) =>
+          track.info.length >= (this.length ? this.length : 0) - 2000 &&
+          track.info.length <= (this.length ? this.length : 0) + 2000,
+      );
+      if (sameDuration) return sameDuration;
+    }
+
+    return rawTracks[0];
+ 
   }
 }
