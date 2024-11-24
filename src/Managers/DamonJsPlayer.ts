@@ -181,6 +181,9 @@ export class DamonJsPlayer {
       trackSkip: async (trackId: number) => {
         await this.handleTrackSkip(trackId);
       },
+      playerDestroy: async () => {
+        await this.handlePlayerDestroy();
+      },
     };
     const shoukakuEvents = ['start', 'end', 'closed', 'exception', 'update', 'stuck', 'resumed'] as const;
     shoukakuEvents.forEach((event) => {
@@ -198,6 +201,7 @@ export class DamonJsPlayer {
       'resolveError',
       'trackPlay',
       'trackSkip',
+      'playerDestroy',
     ] as const;
     damonjsEvents.forEach((event) => {
       this.events.on(event, (data) => eventHandlers[event](data));
@@ -331,7 +335,7 @@ export class DamonJsPlayer {
           this.stats.skipAttemptData.destroyTriggers = destroyTriggers;
           if (destroyTriggers.length >= this.damonjs.skipSpam.destroy.maxhits) {
             this.emit(Events.Debug, this, `Player ${this.guildId} skipped too many times, destroying`);
-            await this.destroy();
+            this.events.emit('playerDestroy');
             return this;
           }
           this.emit(
