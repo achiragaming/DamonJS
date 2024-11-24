@@ -134,13 +134,13 @@ export class DamonJsPlayer {
     this.state = PlayerState.CONNECTED;
   }
   private playbackQueue = {
-    operations: [] as Array<{
+    operations: [] as {
       priority: number;
       name: string;
       operation: () => Promise<any>;
       resolve: (value: any) => void;
       reject: (error: Error) => void;
-    }>,
+    }[],
     isProcessing: false,
   };
 
