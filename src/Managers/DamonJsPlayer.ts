@@ -52,7 +52,7 @@ export class DamonJsPlayer {
   public readonly data: Map<string, any>;
   public search: (query: string, options: DamonJsSearchOptions) => Promise<DamonJsSearchResult>;
   public readonly stats: {
-    playAttemptData: { playAttempts: number[]; destroyTriggers: number[]; lastPlayTime: number };
+    skipAttemptData: { skipAttempts: number[]; destroyTriggers: number[]; lastSkipTime: number };
   };
   events: EventEmitter;
 
@@ -73,33 +73,58 @@ export class DamonJsPlayer {
     this.data = new Map(options.data);
     this.textId = this.options.textId;
     this.stats = {
-      playAttemptData: { playAttempts: [], destroyTriggers: [], lastPlayTime: 0 },
+      skipAttemptData: { skipAttempts: [], destroyTriggers: [], lastSkipTime: 0 },
     };
     this.search = (query, searchOptions) => this.damonjs.search(query, searchOptions, this);
   }
-  private async lockAction<T>(key: string, operation: () => Promise<T>): Promise<T> {
-    const existingLock = Array.from(this.lockMap.keys()).find((existingKey) => key.startsWith(existingKey));
+  private async executePlaybackOperation<T>(
+    name: string,
+    operation: () => Promise<T>,
+    priority: number = 1,
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.playbackQueue.operations.push({
+        priority,
+        name,
+        operation,
+        resolve,
+        reject,
+      });
 
-    if (existingLock) {
+      this.playbackQueue.operations.sort((a, b) => b.priority - a.priority);
+
+      if (!this.playbackQueue.isProcessing) {
+        this.processPlaybackQueue();
+      }
+    });
+  }
+
+  private async processPlaybackQueue() {
+    if (this.playbackQueue.isProcessing || this.playbackQueue.operations.length === 0) return;
+
+    this.playbackQueue.isProcessing = true;
+
+    while (this.playbackQueue.operations.length > 0) {
+      const current = this.playbackQueue.operations.shift();
+      if (!current) continue;
+
       try {
-        await this.lockMap.get(existingLock);
+        const result = await current.operation();
+        this.emit(Events.Debug, this, `Executed ${current.name} operation successfully`);
+        current.resolve(result);
       } catch (error) {
-        // Continue even if previous lock had an error
+        this.emit(
+          Events.Debug,
+          this,
+          `Failed to execute ${current.name} operation: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        current.reject(error instanceof Error ? error : new Error(String(error)));
       }
     }
 
-    const lockPromise = operation();
-
-    this.lockMap.set(key, lockPromise);
-
-    try {
-      return await lockPromise;
-    } catch (error) {
-      throw error;
-    } finally {
-      this.lockMap.delete(key);
-    }
+    this.playbackQueue.isProcessing = false;
   }
+
 
   public async init() {
     if (this.state === PlayerState.CONNECTED)
@@ -108,6 +133,16 @@ export class DamonJsPlayer {
     this.initEventListeners();
     this.state = PlayerState.CONNECTED;
   }
+  private playbackQueue = {
+    operations: [] as Array<{
+      priority: number;
+      name: string;
+      operation: () => Promise<any>;
+      resolve: (value: any) => void;
+      reject: (error: Error) => void;
+    }>,
+    isProcessing: false,
+  };
 
   private initEventListeners() {
     const eventHandlers = {
@@ -158,82 +193,241 @@ export class DamonJsPlayer {
       this.events.on(event, (data) => eventHandlers[event](data));
     });
   }
-
+  // playback functions (HAPPENS SEQUANTIALLY)
   private async handleTrackEnd(data: TrackEndEvent) {
-    const currentTrack = this.queue.current;
-    if (currentTrack) {
-      this.queue.current = undefined;
-      this.emit(Events.PlayerEnd, this, currentTrack, data);
-    }
+    return this.executePlaybackOperation(
+      'trackEnd',
+      async () => {
+        const currentTrack = this.queue.current;
+        if (currentTrack) {
+          this.queue.current = undefined;
+          this.emit(Events.PlayerEnd, this, currentTrack, data);
+        }
 
-    if (this.damonjs.trackEnd.skip) {
-      await this.skip();
-    }
+        if (this.damonjs.trackEnd.skip) {
+          await this.skip();
+        }
+      },
+      2,
+    );
   }
 
   private async handleTrackException(data: TrackExceptionEvent) {
-    const currentTrack = this.queue.current;
-    if (currentTrack) {
-      this.queue.current = undefined;
-      this.emit(Events.PlayerException, this, currentTrack, data);
-    }
+    return this.executePlaybackOperation(
+      'trackStart',
+      async () => {
+        const currentTrack = this.queue.current;
+        if (currentTrack) {
+          this.queue.current = undefined;
+          this.emit(Events.PlayerException, this, currentTrack, data);
+        }
 
-    if (this.damonjs.trackException.skip) {
-      await this.skip();
-    }
+        if (this.damonjs.trackException.skip) {
+          await this.skip();
+        }
+      },
+      2,
+    );
   }
 
   private async handleTrackStuck(data: TrackStuckEvent) {
-    const currentTrack = this.queue.current;
+    return this.executePlaybackOperation(
+      'trackStuck',
+      async () => {
+        const currentTrack = this.queue.current;
 
-    if (currentTrack) {
-      this.queue.current = undefined;
-      this.emit(Events.PlayerStuck, this, currentTrack, data);
-    }
+        if (currentTrack) {
+          this.queue.current = undefined;
+          this.emit(Events.PlayerStuck, this, currentTrack, data);
+        }
 
-    if (this.damonjs.trackStuck.skip) {
-      await this.skip();
-    }
+        if (this.damonjs.trackStuck.skip) {
+          await this.skip();
+        }
+      },
+      2,
+    );
   }
 
   private async handleResolveError(resolveResult: Error) {
-    const currentTrack = this.queue.current;
+    return this.executePlaybackOperation(
+      'resolveError',
+      async () => {
+        const currentTrack = this.queue.current;
 
-    if (currentTrack) {
-      this.queue.current = undefined;
-      this.emit(Events.PlayerResolveError, this, currentTrack, resolveResult.message);
-    }
-    if (this.damonjs.trackResolveError.skip) {
-      await this.skip();
-    }
+        if (currentTrack) {
+          this.queue.current = undefined;
+          this.emit(Events.PlayerResolveError, this, currentTrack, resolveResult.message);
+        }
+        if (this.damonjs.trackResolveError.skip) {
+          await this.skip();
+        }
+      },
+      2,
+    );
   }
 
-  private async handlePlayerDestroy() {
-    if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
-      throw new DamonJsError(1, 'Player is already destroyed');
-    }
-    this.state = PlayerState.DESTROYING;
-    await this.shoukaku.leaveVoiceChannel(this.guildId);
-    this.damonjs.players.delete(this.guildId);
-    this.state = PlayerState.DESTROYED;
-    this.emit(Events.PlayerDestroy, this, this.queue.current);
-    this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
-    return this;
-  }
   private async handleTrackStart() {
-    const currentTrack = this.queue.current;
-    if (!currentTrack) {
-      return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
-    }
-    this.player.paused = false;
-    this.emit(Events.PlayerStart, this, currentTrack);
+    return this.executePlaybackOperation(
+      'trackStart',
+      async () => {
+        const currentTrack = this.queue.current;
+        if (!currentTrack) {
+          return this.emit(Events.Debug, this, `No track to start ${this.guildId}`);
+        }
+        this.player.paused = false;
+        this.emit(Events.PlayerStart, this, currentTrack);
+      },
+      2,
+    );
   }
 
   private async handlePlayerEmpty() {
-    this.emit(Events.PlayerEmpty, this, this.queue.lastTrack);
-    return this;
+    return this.executePlaybackOperation(
+      'playerEmpty',
+      async () => {
+        this.emit(Events.PlayerEmpty, this, this.queue.lastTrack);
+        return this;
+      },
+      1,
+    );
   }
 
+  private async handleTrackSkip(trackId: number) {
+    return this.executePlaybackOperation(
+      'trackSkip',
+      async () => {
+        if (this.state === PlayerState.DESTROYED) {
+          throw new DamonJsError(1, 'Player is already destroyed');
+        }
+        const now = Date.now();
+        const playAttempts = this.stats.skipAttemptData.skipAttempts.filter(
+          (time) => now - time < this.damonjs.skipSpam.rule.timeFrame,
+        );
+        const destroyTriggers = this.stats.skipAttemptData.destroyTriggers.filter(
+          (time) => now - time < this.damonjs.skipSpam.destroy.timeFrame,
+        );
+
+        playAttempts.push(now);
+        this.stats.skipAttemptData.skipAttempts = playAttempts;
+        this.stats.skipAttemptData.lastSkipTime = now;
+
+        if (playAttempts.length >= this.damonjs.skipSpam.rule.maxhits) {
+          destroyTriggers.push(now);
+          this.stats.skipAttemptData.destroyTriggers = destroyTriggers;
+          if (destroyTriggers.length >= this.damonjs.skipSpam.destroy.maxhits) {
+            this.emit(Events.Debug, this, `Player ${this.guildId} skipped too many times, destroying`);
+            await this.destroy();
+            return this;
+          }
+          this.emit(
+            Events.Debug,
+            this,
+            `Player ${this.guildId} skipped too many times, in cooldown for ${this.damonjs.skipSpam.rule.cooldown}ms`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, this.damonjs.skipSpam.rule.cooldown));
+        }
+
+        if (this.loop === LoopState.Track) {
+          this.queue.currentId = this.queue.currentId;
+        } else if (this.loop === LoopState.Queue && this.queue.isEnd) {
+          this.queue.currentId = 0;
+        } else if (this.queue[trackId]) {
+          this.queue.currentId = trackId;
+        } else if (this.queue.length <= trackId) {
+          this.queue.currentId = this.queue.length;
+        } else {
+          this.queue.currentId = this.queue.length - 1;
+        }
+
+        await this.play().catch((e: Error) => this.emit(Events.Debug, this, e.message));
+
+        return this;
+      },
+      2,
+    );
+  }
+
+  private async handleTrackPlay(tracks?: DamonJsTrack[], options?: PlayOptions) {
+    return this.executePlaybackOperation(
+      'play',
+      async () => {
+        if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
+        if (!tracks && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
+
+        if (tracks) {
+          if (options?.replaceCurrent && this.queue.current) {
+            // Remove current track and add new tracks at current position
+            this.queue.splice(this.queue.currentId, 1, ...tracks);
+          } else {
+            // Add after current track
+            this.queue.splice(this.queue.currentId, 0, ...tracks);
+          }
+        }
+
+        if (this.queue.current) {
+          this.queue.currentId--;
+          await this.stopTrack();
+          return this;
+        }
+
+        const currentTrack = this.queue.at(this.queue.currentId);
+        if (!currentTrack) {
+          this.events.emit('empty');
+          throw new DamonJsError(1, 'No track is available to play');
+        }
+        this.queue.current = currentTrack;
+
+        currentTrack.setDamonJs(this.damonjs);
+        const resolveResult = await currentTrack.resolve({ player: this }).catch((e: Error) => e);
+        if (resolveResult instanceof Error) {
+          this.events.emit('resolveError', resolveResult);
+          throw new DamonJsError(
+            1,
+            `Player ${this.guildId} resolve error: ${resolveResult.message}-${currentTrack.identifier}`,
+          );
+        }
+
+        let playOptions = { track: { encoded: currentTrack.encoded, userData: currentTrack.requester ?? {} } };
+        if (options) playOptions = { ...playOptions, ...options };
+
+        const playerResult = await this.player.playTrack(playOptions).catch((e: Error) => e);
+        if (playerResult instanceof Error) {
+          this.events.emit('resolveError', playerResult);
+          throw new DamonJsError(
+            1,
+            `Player ${this.guildId} resolve error: ${playerResult.message}-${currentTrack.identifier}`,
+          );
+        }
+        return this;
+      },
+      2,
+    );
+  }
+  private async handlePlayerDestroy() {
+    return this.executePlaybackOperation(
+      'destroy',
+      async () => {
+        if (this.state === PlayerState.DESTROYING || this.state === PlayerState.DESTROYED) {
+          throw new DamonJsError(1, 'Player is already destroyed');
+        }
+        this.state = PlayerState.DESTROYING;
+        this.events.removeAllListeners();
+        this.lockMap.clear();
+        this.queue.clear();
+        this.data.clear();
+        await this.shoukaku.leaveVoiceChannel(this.guildId);
+        this.damonjs.players.delete(this.guildId);
+        this.state = PlayerState.DESTROYED;
+        this.emit(Events.PlayerDestroy, this, this.queue.current);
+        this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
+        return this;
+      },
+      3,
+    );
+  }
+
+  // NON playback operations (does not go sequentially)
   private async handleTrackResumed() {
     this.emit(Events.PlayerResumed, this);
   }
@@ -249,7 +443,6 @@ export class DamonJsPlayer {
     this.queue.current.position = data.state.position || 0;
     this.emit(Events.PlayerUpdate, this, this.queue.current, data);
   }
-
   /**
    * Get GuildId
    */
@@ -353,73 +546,7 @@ export class DamonJsPlayer {
    * @returns {Promise<DamonJsPlayer>}
    */
   public async play(tracks?: DamonJsTrack[], options?: PlayOptions): Promise<DamonJsPlayer> {
-    return this.lockAction('play', async () => {
-      if (this.state === PlayerState.DESTROYED) throw new DamonJsError(1, 'Player is already destroyed');
-      if (!tracks && !this.queue.totalSize) throw new DamonJsError(1, 'No track is available to play');
-
-      const now = Date.now();
-      const playAttempts = this.stats.playAttemptData.playAttempts.filter(
-        (time) => now - time < this.damonjs.playSpam.rule.timeFrame,
-      );
-      const destroyTriggers = this.stats.playAttemptData.destroyTriggers.filter(
-        (time) => now - time < this.damonjs.playSpam.destroy.timeFrame,
-      );
-
-      playAttempts.push(now);
-      this.stats.playAttemptData.playAttempts = playAttempts;
-      this.stats.playAttemptData.lastPlayTime = now;
-
-      if (playAttempts.length >= this.damonjs.playSpam.rule.maxhits) {
-        destroyTriggers.push(now);
-        this.stats.playAttemptData.destroyTriggers = destroyTriggers;
-        if (destroyTriggers.length >= this.damonjs.playSpam.destroy.maxhits) {
-          await this.destroy();
-          return this;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, this.damonjs.playSpam.rule.cooldown));
-      }
-
-      if (tracks) {
-        if (options?.replaceCurrent && this.queue.current) {
-          // Remove current track and add new tracks at current position
-          this.queue.splice(this.queue.currentId, 1, ...tracks);
-        } else {
-          // Add after current track
-          this.queue.splice(this.queue.currentId, 0, ...tracks);
-        }
-      }
-
-      if (this.queue.current) {
-        this.queue.currentId--;
-        await this.stopTrack();
-        return this;
-      }
-
-      const currentTrack = this.queue.at(this.queue.currentId);
-      if (!currentTrack) {
-        this.events.emit('empty');
-        throw new DamonJsError(1, 'No track is available to play');
-      }
-      this.queue.current = currentTrack;
-
-      currentTrack.setDamonJs(this.damonjs);
-      const resolveResult = await currentTrack.resolve({ player: this }).catch((e: Error) => e);
-      if (resolveResult instanceof Error) {
-        this.events.emit('resolveError', resolveResult);
-        throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${resolveResult.message}-${currentTrack}`);
-      }
-
-      let playOptions = { track: { encoded: currentTrack.encoded, userData: currentTrack.requester ?? {} } };
-      if (options) playOptions = { ...playOptions, ...options };
-
-      const playerResult = await this.player.playTrack(playOptions).catch((e: Error) => e);
-      if (playerResult instanceof Error) {
-        this.events.emit('resolveError', playerResult);
-        throw new DamonJsError(1, `Player ${this.guildId} resolve error: ${playerResult.message}-${currentTrack}`);
-      }
-      return this;
-    });
+    return this.handleTrackPlay(tracks, options);
   }
   /**
    * Skips to the next track in the queue.
@@ -471,25 +598,7 @@ export class DamonJsPlayer {
    * @throws {DamonJsError} If the player is already destroyed.
    */
   public async skipto(trackId: number): Promise<DamonJsPlayer> {
-    if (this.state === PlayerState.DESTROYED) {
-      throw new DamonJsError(1, 'Player is already destroyed');
-    }
-
-    if (this.loop === LoopState.Track) {
-      this.queue.currentId = this.queue.currentId;
-    } else if (this.loop === LoopState.Queue && this.queue.isEnd) {
-      this.queue.currentId = 0;
-    } else if (this.queue[trackId]) {
-      this.queue.currentId = trackId;
-    } else if (this.queue.length <= trackId) {
-      this.queue.currentId = this.queue.length;
-    } else {
-      this.queue.currentId = this.queue.length - 1;
-    }
-
-    await this.play().catch((e: Error) => this.emit(Events.Debug, this, e.message));
-
-    return this;
+    return this.handleTrackSkip(trackId);
   }
 
   /**
@@ -737,7 +846,7 @@ export class DamonJsPlayer {
    * @returns Promise<DamonJsPlayer>
    */
   async destroy(): Promise<DamonJsPlayer> {
-    return await this.handlePlayerDestroy();
+    return this.handlePlayerDestroy();
   }
   public emit<K extends keyof DamonJsEvents>(event: K, ...args: DamonJsEvents[K]): void {
     this.damonjs.emit(event, ...args);

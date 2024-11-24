@@ -43,7 +43,7 @@ export class DamonJs extends EventEmitter {
   /** DamonJs players */
 
   public readonly players: Map<string, DamonJsPlayer>;
-  public playSpam: {
+  public skipSpam: {
     rule: {
       maxhits: number;
       timeFrame: number;
@@ -81,8 +81,8 @@ export class DamonJs extends EventEmitter {
 
     this.shoukaku = shoukaku;
 
-    this.playSpam = this.DamonJsOptions.playSpam
-      ? this.DamonJsOptions.playSpam
+    this.skipSpam = this.DamonJsOptions.skipSpam
+      ? this.DamonJsOptions.skipSpam
       : {
           rule: { maxhits: 3, timeFrame: 30 * 1000, cooldown: 5 * 1000 },
           destroy: { maxhits: 4, timeFrame: 30 * 1000 },

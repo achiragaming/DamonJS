@@ -15,7 +15,7 @@ export interface DamonJsOptions {
   /** Default search engine if no engine was provided. Default to youtube */
   defaultSearchEngine: SearchEngines;
   /** play spam config until destroys */
-  playSpam?: {
+  skipSpam?: {
     rule: {
       maxhits: number;
       timeFrame: number;
