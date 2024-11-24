@@ -123,8 +123,10 @@ export class DamonJsPlayer {
     }
 
     this.playbackQueue.isProcessing = false;
+    if (this.playbackQueue.operations.length > 0) {
+      this.processPlaybackQueue();
+    }
   }
-
 
   public async init() {
     if (this.state === PlayerState.CONNECTED)
