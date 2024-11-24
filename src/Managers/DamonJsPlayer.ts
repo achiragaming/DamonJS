@@ -175,6 +175,12 @@ export class DamonJsPlayer {
       resolveError: async (resolveResult: Error) => {
         await this.handleResolveError(resolveResult);
       },
+      trackPlay: async (tracks?: DamonJsTrack[], options?: PlayOptions) => {
+        await this.handleTrackPlay(tracks, options);
+      },
+      trackSkip: async (trackId: number) => {
+        await this.handleTrackSkip(trackId);
+      },
     };
     const shoukakuEvents = ['start', 'end', 'closed', 'exception', 'update', 'stuck', 'resumed'] as const;
     shoukakuEvents.forEach((event) => {
@@ -190,6 +196,8 @@ export class DamonJsPlayer {
       'resumed',
       'empty',
       'resolveError',
+      'trackPlay',
+      'trackSkip',
     ] as const;
     damonjsEvents.forEach((event) => {
       this.events.on(event, (data) => eventHandlers[event](data));
@@ -207,7 +215,8 @@ export class DamonJsPlayer {
         }
 
         if (this.damonjs.trackEnd.skip) {
-          await this.skip();
+          const trackId = this.queue.currentId + 1;
+          this.events.emit('trackSkip', trackId);
         }
       },
       2,
@@ -225,7 +234,8 @@ export class DamonJsPlayer {
         }
 
         if (this.damonjs.trackException.skip) {
-          await this.skip();
+          const trackId = this.queue.currentId + 1;
+          this.events.emit('trackSkip', trackId);
         }
       },
       2,
@@ -244,7 +254,8 @@ export class DamonJsPlayer {
         }
 
         if (this.damonjs.trackStuck.skip) {
-          await this.skip();
+          const trackId = this.queue.currentId + 1;
+          this.events.emit('trackSkip', trackId);
         }
       },
       2,
@@ -262,7 +273,8 @@ export class DamonJsPlayer {
           this.emit(Events.PlayerResolveError, this, currentTrack, resolveResult.message);
         }
         if (this.damonjs.trackResolveError.skip) {
-          await this.skip();
+          const trackId = this.queue.currentId + 1;
+          this.events.emit('trackSkip', trackId);
         }
       },
       2,
@@ -342,7 +354,7 @@ export class DamonJsPlayer {
           this.queue.currentId = this.queue.length - 1;
         }
 
-        await this.play().catch((e: Error) => this.emit(Events.Debug, this, e.message));
+        this.events.emit('trackPlay');
 
         return this;
       },
