@@ -441,7 +441,7 @@ export class DamonJsPlayer {
         this.emit(Events.Debug, this, `Player destroyed; Guild id: ${this.guildId}`);
         return this;
       },
-      3,
+      2,
     );
   }
 
